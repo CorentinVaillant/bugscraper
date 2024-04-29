@@ -5,7 +5,7 @@ local InputActionState = require "scripts.input.input_action_state"
 local gamepadguesser = require "lib.gamepadguesser"
 gamepadguesser.loadMappings("lib/gamepadguesser")
 
-local midi = require "lib.midi_input_handler.midi_input_handler"
+local midi = require("lib.midi_input_handler.libmidi_input_handler")
 
 local InputUser = Class:inherit()
 
@@ -26,7 +26,7 @@ function InputUser:init(n, input_profile_id, is_global)
 --Corentin    
     self.midi_controller = nil
 
-    midi.init_midi()
+    --midi.init_midi()
 ---
 end
 

@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Corentin Vaillant"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# [build]
+# target = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-gnu"]
+# target-dir = "./"
 
 [lib]
 crate-type = ["cdylib"]
