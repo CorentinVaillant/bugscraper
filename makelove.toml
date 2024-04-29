@@ -8,3 +8,7 @@ love_files = [
     "-*/.*",
     "-./export/*",
 ]
+
+shared_libraries = [
+    "lib/midi_input_handler/libmidi_input_handler"
+]
