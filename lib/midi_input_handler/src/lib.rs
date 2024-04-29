@@ -1,5 +1,6 @@
 mod midi_handler;
 
+use midi_control::note;
 use midi_handler::*;
 use mlua::prelude::*;
 use std::thread;
@@ -16,7 +17,7 @@ use std::thread;
 fn lua_init(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("print_rust", lua.create_function(lua_print_rust)?)?;
-    exports.set("innit_midi", lua.create_function(lua_innit_midi)?)?;
+    exports.set("init_midi", lua.create_function(lua_innit_midi)?)?;
     Ok(exports)
 }
 
@@ -27,8 +28,23 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 }
 
 //function that I want to use
-fn lua_innit_midi(_: &Lua, _: ()) -> LuaResult<()> {
+fn lua_innit_midi(_: &Lua,table :LuaTable) -> LuaResult<()> {
+    
     thread::spawn(|| {init();});
 
     Ok(())
+}
+
+
+//table to informe that a button has a value
+fn MidiInputPressedToTable(input : MidiInputPressed,lua: &Lua)->LuaResult<LuaTable>{
+    let table = lua.create_table()?;
+
+    let (last_input,last_input_name) = (unsafe { std::ptr::addr_of!(LAST_INPUT) }, unsafe { LAST_INPUT.get_input_name() });
+    //grrrr fonctionne pas
+    //TODO
+
+    
+    
+    Ok(table)
 }

@@ -1,4 +1,5 @@
 require "scripts.util"
+local midi = require("lib.midi_input_handler.libmidi_input_handler") --Corentin
 local Class = require "scripts.meta.class"
 local Loot = require "scripts.actor.loot"
 local upgrades = require "data.upgrades"
@@ -22,6 +23,11 @@ function Debug:init(game)
 
     self.notification_message = ""
     self.notification_timer = 0.0
+
+
+--Corentin
+    midi.print_rust("loading midi lib")
+    midi.init_midi()
 
     local func_damage = function(n)
         return function()
@@ -395,7 +401,9 @@ function Debug:draw_info_view()
 		concat("windowed_h: ", Options:get("windowed_height")),
 		concat("real_wave_n ", self.game.debug2),
 		concat("number_of_alive_players ", self.game:get_number_of_alive_players()),
-		concat("menu_stack ", #self.game.menu_manager.menu_stack),
+--CORENTIN
+		concat("midi_button :", nil), --!TODO
+        
 		players_str,
 		users_str,
 		joystick_user_str,
