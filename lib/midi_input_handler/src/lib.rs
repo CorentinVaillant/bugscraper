@@ -1,6 +1,4 @@
-mod midi_handler;
-
-use midi_handler::*;
+use crate::midi_handler::*;
 use mlua::prelude::*;
 use std::thread;
 
