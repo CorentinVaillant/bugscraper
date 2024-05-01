@@ -205,7 +205,7 @@ pub fn init() -> Receiver<MidiInputPressed> {
         let mut connections: Vec<MidiInputConnection<Sender<MidiInputPressed>>> =
             init_connections(&midi_input, &sender);
 
-        loop {
+        loop {//TODO stop active loop
             if connections.len() != midi_input.port_count() {
                 connections = init_connections(&midi_input, &sender);
             }

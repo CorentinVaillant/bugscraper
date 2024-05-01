@@ -55,15 +55,13 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
     let (sender, receiver) = channel::<MidiInputPressed>();
     *RECEIVER.lock().unwrap() = Some(receiver);
-    thread::spawn(move || {
-        let receiver_old = init();
+    
+    let _midi_handler_thread = thread::spawn(move || {
+        let receiver_old = init(); //TODO receiver_old est supprimer (le thread le contenant dans midi_handler.rs doit probablement se terminé)
         loop {
             let input = receiver_old.recv();
 
-            match sender.send(input.unwrap()) {
-                Ok(_) => (),
-                Err(e) => println!("error : {e:?} in lua init midi"),
-            };
+            sender.send(input.unwrap()).expect("receiver not allocated (lua init midi)");
         }
     });
 
