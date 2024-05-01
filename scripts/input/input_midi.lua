@@ -13,18 +13,16 @@ local Class = require "scripts.meta.class"
 
 local midilib = {}
 
-local function update_input()
-    
+function midilib.update_input()
+    if midi.get_inputs() ~= {} then
+        print_table(midi.get_inputs())
+    end
 end
 
 function midilib.init_midi()
-    midi.init_midi(update_input)
+    midi.init_midi()
 end
 
-
-function midilib.keypressed()
-    
-end
 
 return midilib
 

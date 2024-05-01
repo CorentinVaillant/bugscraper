@@ -1,5 +1,9 @@
 local Class = require "scripts.meta.class"
 local Game = require "scripts.game.game"
+
+local midi = require("scripts.input.input_midi") --toremove
+midi.init_midi()--toremove
+
 require "scripts.util"
 
 -- LÖVE uses Luajit 2.1 which is based on Lua 5.1 but has some additions (like goto)
@@ -27,6 +31,7 @@ local function fixed_update()
 end
 
 function love.update(dt)
+	midi.update_input()--toremove
 	t = t + dt
 	local cap = 1 --If there's lag spike, repeat up to how many frames?
 	local i = 0

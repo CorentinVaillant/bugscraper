@@ -121,7 +121,8 @@ impl MidiInputPressed {
 
 fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>) {
     let message = MidiMessage::from(data);
-    print!("\nreceived midi data {:?} -> ", data);
+    #[cfg(debug_assertions)]
+    print!("\nreceived midi data  -> {:?}", data);
     match message {
         MidiMessage::NoteOn(channel, key) => {
             let note: Note = Note::from(key, channel);

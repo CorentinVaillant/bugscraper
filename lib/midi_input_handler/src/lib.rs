@@ -1,11 +1,19 @@
 mod midi_handler;
 
-use std::thread;
+use std::{
+    sync::mpsc::{channel, Receiver},
+    thread,
+};
 
+use lazy_static::lazy_static;
 use midi_handler::*;
 use mlua::prelude::*;
 
-static mut BUFFER: Vec<MidiInputPressed> = vec![];
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref RECEIVER: Mutex<Option<Receiver<MidiInputPressed>>> = Mutex::new(None);
+}
 
 //LUA functions
 
@@ -44,36 +52,45 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
     Ok(())
 }
 
-fn lua_init_midi(lua: &Lua, _: ()) -> LuaResult<LuaTable> {
-    let input_table = lua.create_table()?;
-    thread::spawn(|| {
-        let receiver = init();
+fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
+    let (sender, receiver) = channel::<MidiInputPressed>();
+    *RECEIVER.lock().unwrap() = Some(receiver);
+    thread::spawn(move || {
+        let receiver_old = init();
         loop {
-            let input = receiver.recv();
-            unsafe {
-                BUFFER.push(input.unwrap()); //TODO handle unwrap
-            }
+            let input = receiver_old.recv();
+
+            match sender.send(input.unwrap()) {
+                Ok(_) => (),
+                Err(e) => println!("error : {e:?} in lua init midi"),
+            };
         }
     });
 
-    Ok(input_table)
+    Ok(())
 }
 
 //renvoie None ou les inputs d'un buffer
 fn lua_get_inputs(lua: &Lua, _: ()) -> LuaResult<LuaTable> {
+    let receiver = RECEIVER.lock().unwrap();
+    let receiver = receiver.as_ref().expect("Receiver not initialized");
+
     let buffer_table = lua.create_table()?;
-    print!("{}", unsafe { BUFFER.len() });
-    for (i, input) in unsafe { BUFFER.iter().enumerate() } {
-        buffer_table.set(i, midi_input_to_table(lua, input)?)?;
+
+    while let Ok(input) = receiver.try_recv() {
+        buffer_table.set(
+            buffer_table.len().expect("error len lua get inputs") + 1,
+            midi_input_to_table(lua, &input)?,
+        )?;
     }
-    println!(" -> {}", unsafe { BUFFER.len() });
+
     Ok(buffer_table)
 }
 
 //---------------------
 
 fn midi_input_to_table<'a>(lua: &'a Lua, input: &'a MidiInputPressed) -> LuaResult<LuaTable<'a>> {
-    let input_table= lua.create_table()?;
+    let input_table = lua.create_table()?;
     match input {
         MidiInputPressed::Note(note) => {
             input_table.set("midi_type", "note")?;
