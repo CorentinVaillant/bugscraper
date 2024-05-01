@@ -1,8 +1,9 @@
 
 use midi_control::*;
 use midir::*;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
 
-pub static mut LAST_INPUT : MidiInputPressed = MidiInputPressed::None;
 
 #[allow(dead_code)]
 pub const FRENCH_NOTE_TABLE : [&str;12] = ["do" ,"do#","re","re#","mi","fa","fa#","sol","sol#","la","la#","si"];
@@ -69,38 +70,38 @@ impl MidiInputPressed {
 
 
 
-fn callback(_timestamp: u64, data: &[u8], _:&mut ()) {
+fn callback(_timestamp: u64, data: &[u8], sender: &Sender<MidiInputPressed>) {
     let message = MidiMessage::from(data);
     print!("\nreceived midi data {:?} -> ", data);
     match message {
         MidiMessage::NoteOn(channel, key) => {
             let note: Note = Note::from(key, channel);
             #[cfg(debug_assertions)] println!("{} on channel : {channel:?} ", note.to_string());
-            unsafe { LAST_INPUT = MidiInputPressed::Note(note); }
+            //use channel
         }
         MidiMessage::NoteOff(channel, key) => {
             let note: Note = Note::from(key, channel);
             #[cfg(debug_assertions)] println!("{} on channel : {channel:?} ", note.to_string());
-            unsafe { LAST_INPUT = MidiInputPressed::Note(note)};
+            //use channel
         }
 
         MidiMessage::PitchBend(channel,x ,y ) =>{
             #[cfg(debug_assertions)] println!("pitch bend : ({x},{y}) on channel : {channel:?}");
             let axis =MidiValue{ value:-1*i16::from(y)*2,key:0, channel};
-            unsafe{ LAST_INPUT = MidiInputPressed::JoystickX(axis)};
+            //use channel
 
         }
 
         MidiMessage::PolyKeyPressure(channel,key ) =>{
             #[cfg(debug_assertions)] println!("polykey pressure : ({:?}) on channel : {channel:?}",key.key);
             let axis =MidiValue{ value:i16::from(key.value),key:key.key , channel};
-            unsafe{ LAST_INPUT = MidiInputPressed::JoystickY(axis)};
+            //use channel
         }
 
         MidiMessage::ControlChange(channel,controle ) => {
             #[cfg(debug_assertions)] println!("control change : ({:?}) -> ({:?}) on channel : {channel:?}",controle.control,controle.value);
             let knob =MidiValue{ value:i16::from(controle.value),key:controle.control, channel};
-            unsafe{ LAST_INPUT = MidiInputPressed::Knob(knob)};
+            //use channel
         }
         
 
@@ -109,35 +110,35 @@ fn callback(_timestamp: u64, data: &[u8], _:&mut ()) {
     }
 }
 
-pub fn init() {
+pub fn init()->Receiver<MidiInputPressed> {
     //initialisation
+
+    let (sender, receiver) = channel::<MidiInputPressed>();
+thread::spawn(||{
     let midi_input: MidiInput = match MidiInput::new("input") {
         Ok(result) => result,
         Err(e) => panic!("{}", e),
     };
 
-    // callback_func.call::<_,()>(());
 
     //conection
     let ports_nb = midi_input.port_count();
     println!("{} ports avalaibles", ports_nb);
     let _connection_number = 0;
 
-    let mut connections: Vec<MidiInputConnection<()>> = innit_connections(&midi_input);
+    let mut connections: Vec<MidiInputConnection<()>> = init_connections(&midi_input,&sender);
 
-    #[allow(while_true)]
-    while true {
-
-
+    loop {
         if connections.len() != midi_input.port_count() {
-            connections = innit_connections(&midi_input);
+            connections = init_connections(&midi_input,&sender);
         }
     }
-
-    println!("[rust] exit !!");
+    
+});
+    receiver
 }
 
-fn innit_connections<'a>(midi_input: & MidiInput) -> Vec<MidiInputConnection<()>> {
+fn init_connections<'a>(midi_input: & MidiInput,sender: &Sender<MidiInputPressed>) -> Vec<MidiInputConnection<()>> {
     let mut return_vec: Vec<MidiInputConnection<()>> = vec![];
 
     for port in midi_input.ports() {
@@ -149,7 +150,7 @@ fn innit_connections<'a>(midi_input: & MidiInput) -> Vec<MidiInputConnection<()>
 
         match MidiInput::new(&format!("conection {port_name}"))
             .expect("error new midi input")
-            .connect(&port, name, callback,  ())
+            .connect(&port, name, callback,  &sender)
         {
             Ok(result) => return_vec.push(result),
             Err(e) => eprintln!("Error connecting to port {}: {:?}", name, e),

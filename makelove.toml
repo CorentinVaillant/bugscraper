@@ -9,6 +9,7 @@ love_files = [
     "-./export/*",
 ]
 
+[linux]
 shared_libraries = [
-    "lib/midi_input_handler/libmidi_input_handler"
+    "lib/midi_input_handler/libmidi_input_handler.so"
 ]
