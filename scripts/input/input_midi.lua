@@ -14,7 +14,7 @@ local Class = require "scripts.meta.class"
 local midilib = {}
 
 function midilib.update_input()
-    if midi.get_inputs() ~= {} then
+    if #midi.get_inputs() ~= 0 then
         print_table(midi.get_inputs())
     end
 end
