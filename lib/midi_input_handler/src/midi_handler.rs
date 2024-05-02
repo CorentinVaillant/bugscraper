@@ -190,8 +190,9 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
 pub fn init() -> Receiver<MidiInputPressed> {
     //initialisation
 
-    let (sender, receiver) = channel::<MidiInputPressed>();
+    let (sender, receiver) =  channel::<MidiInputPressed>();
     thread::spawn(move || {
+        let sender = sender.clone();
         let midi_input: MidiInput = match MidiInput::new("input") {
             Ok(result) => result,
             Err(e) => panic!("{}", e),

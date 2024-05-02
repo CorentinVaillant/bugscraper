@@ -61,7 +61,7 @@ fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
         loop {
             let input = receiver_old.recv();
 
-            sender.send(input.unwrap()).expect("receiver not allocated (lua init midi)");
+            sender.send(input.unwrap()).expect("sender not allocated (lua init midi)");
         }
     });
 
