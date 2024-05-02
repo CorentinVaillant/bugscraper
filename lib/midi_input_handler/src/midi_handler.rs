@@ -140,7 +140,8 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
             #[cfg(debug_assertions)]
             println!("pitch bend : ({x},{y}) on channel : {channel:?}");
             let axis = MidiValue {
-                value: -1 * i16::from(y) * 2,
+                value: -i16::from(y) * 2,
+                
                 key: 0,
                 channel,
             };

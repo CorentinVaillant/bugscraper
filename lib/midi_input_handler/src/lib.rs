@@ -53,11 +53,11 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 }
 
 fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
-    let (sender, receiver) = channel::<MidiInputPressed>(); // channel is throw, I don't wan't that !
-    *RECEIVER.lock().unwrap() = Some(receiver);
-    
-//--loop thread--
+    //--loop thread--
     thread::spawn( move || {
+    lazy_static::initialize(&RECEIVER);
+    let (sender, receiver) = channel::<MidiInputPressed>(); // channel is throw, I don't wan't that !
+    *RECEIVER.try_lock().unwrap() = Some(receiver); //TODO handle crash
 
         let sender = sender.clone();
         let input_receiver = init();
@@ -110,7 +110,7 @@ fn midi_input_to_table<'a>(lua: &'a Lua, input: &'a MidiInputPressed) -> LuaResu
         MidiInputPressed::Knob(midi_val) => {
             midival_into_table(&input_table, midi_val, "Knob".to_string())?
         }
-        MidiInputPressed::Unknow(midi_val) => {
+        MidiInputPressed::Unknow(midi_val) => { //TODO unknow -> unknown
             input_table.set("midi_type", "unknown")?;
             input_table.set("id", *midi_val)?;
         }
