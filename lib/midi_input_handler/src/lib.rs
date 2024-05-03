@@ -1,19 +1,19 @@
 mod midi_handler;
+mod wrapper;
 
 use std::{
-    sync::mpsc::{channel, Receiver},
+    sync::{
+        mpsc::{channel, Receiver},
+        OnceLock,
+    },
     thread,
 };
 
-use lazy_static::lazy_static;
 use midi_handler::*;
 use mlua::prelude::*;
+use wrapper::Wrapper;
 
-use std::sync::Mutex;
-
-lazy_static! {
-    static ref RECEIVER: Mutex<Option<Receiver<MidiInputPressed>>> = Mutex::new(None);
-}
+static RECEIVER: OnceLock<Wrapper<Receiver<MidiInputPressed>>> = OnceLock::new();
 
 //LUA functions
 
@@ -53,33 +53,33 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 }
 
 fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
-    //--loop thread--
-    thread::spawn( move || {
-    lazy_static::initialize(&RECEIVER);
     let (sender, receiver) = channel::<MidiInputPressed>(); // channel is throw, I don't wan't that !
-    *RECEIVER.try_lock().unwrap() = Some(receiver); //TODO handle crash
+    RECEIVER.get_or_init(|| Wrapper::new(receiver));
 
-        let sender = sender.clone();
+    //--loop thread--
+    thread::spawn(move || {
+        let sender = sender;
         let input_receiver = init();
         loop {
             let input = input_receiver.recv();
 
-            sender.send(input.expect("no senders for input (lua init midi)"))
+            sender
+                .send(input.expect("no senders for input (lua init midi)"))
                 .expect("can not be send (lua init midi)");
         }
     });
-//--loop thread -- end
+    //--loop thread -- end
     Ok(())
 }
 
 //renvoie None ou les inputs d'un buffer
 fn lua_get_inputs(lua: &Lua, _: ()) -> LuaResult<LuaTable> {
-    let receiver = RECEIVER.lock().unwrap();
-    let receiver = receiver.as_ref().expect("Receiver not initialized");
+    // TODO: handle panic
+    let receiver = RECEIVER.get().unwrap();
 
     let buffer_table = lua.create_table()?;
 
-    while let Ok(input) = receiver.try_recv() {
+    while let Ok(input) = receiver.recv() {
         buffer_table.set(
             buffer_table.len().expect("error len lua get inputs") + 1,
             midi_input_to_table(lua, &input)?,
@@ -110,7 +110,8 @@ fn midi_input_to_table<'a>(lua: &'a Lua, input: &'a MidiInputPressed) -> LuaResu
         MidiInputPressed::Knob(midi_val) => {
             midival_into_table(&input_table, midi_val, "Knob".to_string())?
         }
-        MidiInputPressed::Unknow(midi_val) => { //TODO unknow -> unknown
+        MidiInputPressed::Unknown(midi_val) => {
+            //TODO unknow -> unknown
             input_table.set("midi_type", "unknown")?;
             input_table.set("id", *midi_val)?;
         }

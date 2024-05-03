@@ -37,25 +37,7 @@ impl Note {
     }
     #[allow(dead_code)]
     pub fn get_channel_num(&self) -> u8 {
-        match self.channel {
-            Channel::Ch1 => 1,
-            Channel::Ch2 => 2,
-            Channel::Ch3 => 3,
-            Channel::Ch4 => 4,
-            Channel::Ch5 => 5,
-            Channel::Ch6 => 6,
-            Channel::Ch7 => 7,
-            Channel::Ch8 => 8,
-            Channel::Ch9 => 9,
-            Channel::Ch10 => 10,
-            Channel::Ch11 => 11,
-            Channel::Ch12 => 12,
-            Channel::Ch13 => 13,
-            Channel::Ch14 => 14,
-            Channel::Ch15 => 15,
-            Channel::Ch16 => 16,
-            Channel::Invalid => 0,
-        }
+        ((self.channel as u8) + 1) % 17
     }
 }
 
@@ -72,25 +54,7 @@ impl MidiValue {
     }
     #[allow(dead_code)]
     pub fn get_channel_num(&self) -> u8 {
-        match self.channel {
-            Channel::Ch1 => 1,
-            Channel::Ch2 => 2,
-            Channel::Ch3 => 3,
-            Channel::Ch4 => 4,
-            Channel::Ch5 => 5,
-            Channel::Ch6 => 6,
-            Channel::Ch7 => 7,
-            Channel::Ch8 => 8,
-            Channel::Ch9 => 9,
-            Channel::Ch10 => 10,
-            Channel::Ch11 => 11,
-            Channel::Ch12 => 12,
-            Channel::Ch13 => 13,
-            Channel::Ch14 => 14,
-            Channel::Ch15 => 15,
-            Channel::Ch16 => 16,
-            Channel::Invalid => 0,
-        }
+        ((self.channel as u8) + 1) % 17
     }
 }
 
@@ -101,7 +65,7 @@ pub enum MidiInputPressed {
     JoystickX(MidiValue),
     JoystickY(MidiValue),
     Knob(MidiValue),
-    Unknow(u16),
+    Unknown(u16),
     None,
 }
 
@@ -114,7 +78,7 @@ impl MidiInputPressed {
             Self::JoystickX(val) => val.to_string(),
             Self::JoystickY(val) => val.to_string(),
             Self::Knob(val) => val.to_string(),
-            Self::Unknow(val) => format!("{:x}", val),
+            Self::Unknown(val) => format!("{:x}", val),
         }
     }
 }
@@ -140,8 +104,8 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
             #[cfg(debug_assertions)]
             println!("pitch bend : ({x},{y}) on channel : {channel:?}");
             let axis = MidiValue {
-                value: -i16::from(y) * 2,
-                
+                value: -(y as i16) * 2,
+
                 key: 0,
                 channel,
             };
@@ -155,7 +119,7 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
                 key.key
             );
             let axis = MidiValue {
-                value: i16::from(key.value),
+                value: key.value as i16,
                 key: key.key,
                 channel,
             };
@@ -181,9 +145,9 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
             println!("unknow message received ! data : {:?}", data);
             let mut val: u16 = 0;
             for (i, n) in (0_u8..).zip(data.iter()) {
-                val += u16::from(*n) << (8 * i);
+                val += (*n as u16) << (8 * i);
             }
-            sender.send(MidiInputPressed::Unknow(val)).unwrap(); //TODO HANDLE UNWRAP !!
+            sender.send(MidiInputPressed::Unknown(val)).unwrap(); //TODO HANDLE UNWRAP !!
         }
     }
 }
@@ -191,9 +155,9 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
 pub fn init() -> Receiver<MidiInputPressed> {
     //initialisation
 
-    let (sender, receiver) =  channel::<MidiInputPressed>();
+    let (sender, receiver) = channel::<MidiInputPressed>();
     thread::spawn(move || {
-        let sender = sender.clone();
+        let sender = sender;
         let midi_input: MidiInput = match MidiInput::new("input") {
             Ok(result) => result,
             Err(e) => panic!("{}", e),
@@ -202,12 +166,16 @@ pub fn init() -> Receiver<MidiInputPressed> {
         //conection
         let ports_nb = midi_input.port_count();
         println!("{} ports avalaibles", ports_nb);
-        let _connection_number = 0;
 
         let mut connections: Vec<MidiInputConnection<Sender<MidiInputPressed>>> =
             init_connections(&midi_input, &sender);
 
-        loop {//TODO stop active loop
+        // TODO: faire un truc comme ça (pour eviter les deco/reco forcer des périfs) 
+        // connection de base: [0, 1, 2, 3]
+        // apres T temps: [0, 1, 3, 4]
+        // tableau de diff (entre les 2 tabs du dessus): [2(deconnection), 4(connection)]
+        loop {
+            //TODO stop active loop
             if connections.len() != midi_input.port_count() {
                 connections = init_connections(&midi_input, &sender);
             }
@@ -220,15 +188,15 @@ fn init_connections(
     midi_input: &MidiInput,
     sender: &Sender<MidiInputPressed>,
 ) -> Vec<MidiInputConnection<Sender<MidiInputPressed>>> {
-    let mut return_vec: Vec<MidiInputConnection<Sender<MidiInputPressed>>> = vec![];
+    let mut return_vec: Vec<MidiInputConnection<Sender<MidiInputPressed>>> = Vec::new();
 
     for port in midi_input.ports() {
         let port_name = midi_input
             .port_name(&port)
             .expect("Error getting port name");
-        let name: &str = port_name.as_str();
+        let name = port_name.as_str();
 
-        match MidiInput::new(&format!("conection {port_name}"))
+        match MidiInput::new(&format!("connection {port_name}"))
             .expect("error new midi input")
             .connect(&port, name, callback, sender.clone())
         {
