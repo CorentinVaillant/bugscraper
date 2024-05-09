@@ -188,7 +188,7 @@ RAW_INPUT_MAP_DEFAULT_GLOBAL = {
     right =     {},
     up =        {},
     down =      {},
-    jump =      {"k_c", "k_b", "c_a", "c_b","m_note0-4ch1"},
+    jump =      {"k_c", "k_b", "c_a", "c_b","m_note0_4ch1"},
     shoot =     {},
     
     pause =     {},
