@@ -1,3 +1,10 @@
+
+
+I am currently trying to improve bugscrapper by adding the support for midi controller (a must have !)
+
+# README of Yolwoocle's Bugscrapper :
+
+
 **NOTE:** if you are just here to obtain a free copy of the game, I'm okay with that, but please consider sharing the game with other people, or [supporting me](https://yolwoocle.itch.io/bugscraper) if you can. Thanks! 🙂
 <br>
 <div align="center">
@@ -43,3 +50,8 @@ I don't care. I'm not here to tell you what you should do. I'm making this game 
 This isn't about me, but you: by choosing to buy or pirate a game, you are judging whether you are financially capable of affording it and supporting the developer. Not everyone is comfortable financially. But also, making games is a difficult task. People pour their soul and heart into providing enjoyment to others, usually with very little gains. It is often a labor of love. When you buy a game, you are also expressing your gratitude towards that work. 
 
 So, you decide. 🙂  -->
+
+
+<!--
+Hello from Corentin 🤗
+-->

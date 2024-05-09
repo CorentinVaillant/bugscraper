@@ -15,7 +15,9 @@ midi_lib_debug :
 
 midi_lib_release :
 	
-	cd lib/midi_input_handler && make release
+	cd lib/midi_input_handler && make release TARGET=Linux
+	# cd lib/midi_input_handler && make release TARGET=Darwin
+	# cd lib/midi_input_handler && make release TARGET=Windows_NT
 
 clean :
 	cd lib/midi_input_handler && make clean

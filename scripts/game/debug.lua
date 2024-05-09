@@ -1,5 +1,5 @@
 require "scripts.util"
-local midi = require("lib.midi_input_handler.libmidi_input_handler") --Corentin
+--!local midi = require("lib.midi_input_handler.libmidi_input_handler") --Corentin
 local Class = require "scripts.meta.class"
 local Loot = require "scripts.actor.loot"
 local upgrades = require "data.upgrades"
@@ -26,8 +26,8 @@ function Debug:init(game)
 
 
 --Corentin
-    midi.print_rust("loading midi lib")
-    midi.init_midi()
+    --!midi.print_rust("loading midi lib")
+    --!midi.init_midi()
 
     local func_damage = function(n)
         return function()

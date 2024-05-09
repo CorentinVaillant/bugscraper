@@ -1,5 +1,5 @@
 name = "bugscraper"
-default_targets = []
+default_targets = ["win64", "appimage"]
 build_directory = "export"
 icon_file = "icon.png"
 
@@ -9,7 +9,19 @@ love_files = [
     "-./export/*",
 ]
 
-[linux]
+[hooks]
+prebuild = [
+	"make all_release",
+]
+
+[windows]
+[win32]
 shared_libraries = [
-    "lib/midi_input_handler/libmidi_input_handler.so"
+	"lib/midi_input_handler/libmidi_input_handler.dll",
+]
+
+[appimage]
+
+shared_libraries = [
+	"lib/midi_input_handler/libmidi_input_handler.so",
 ]

@@ -7,15 +7,22 @@
 * * * * * * * * * * * * * * * * * * * *]] 
 
 require "scripts.util"
+
+
 local midi = require("lib.midi_input_handler.libmidi_input_handler")
+    
+
+
 local Class = require "scripts.meta.class"
 
 
 local midilib = {}
 
 function midilib.update_input()
-    if #midi.get_inputs() ~= 0 then
-        print_table(midi.get_inputs())
+
+    local input = midi.get_inputs()
+    if #input ~= 0 then
+        print_table(input)
     end
 end
 

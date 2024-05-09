@@ -15,7 +15,8 @@ use wrapper::Wrapper;
 
 static RECEIVER: OnceLock<Wrapper<Receiver<MidiInputPressed>>> = OnceLock::new();
 
-//LUA functions
+
+//LUA init
 
 //same name as the lib (path include...)
 #[mlua::lua_module]
@@ -45,6 +46,8 @@ fn lua_init(lua: &Lua) -> LuaResult<LuaTable> {
 
     Ok(exports)
 }
+
+//LUA functions
 
 //test function
 fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
