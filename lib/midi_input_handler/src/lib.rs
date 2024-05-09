@@ -54,7 +54,7 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 
 fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
     let (sender, receiver) = channel::<MidiInputPressed>();
-    RECEIVER.get_or_init(move || Wrapper::new(receiver));
+    RECEIVER.get_or_init(|| Wrapper::new(receiver));
 
     //--loop thread--
     thread::spawn(move || {
