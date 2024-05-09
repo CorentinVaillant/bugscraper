@@ -53,33 +53,35 @@ fn lua_print_rust(_: &Lua, message: String) -> LuaResult<()> {
 }
 
 fn lua_init_midi(_lua: &Lua, _: ()) -> LuaResult<()> {
-    let (sender, receiver) = channel::<MidiInputPressed>(); // channel is throw, I don't wan't that !
-    RECEIVER.get_or_init(|| Wrapper::new(receiver));
+    let (sender, receiver) = channel::<MidiInputPressed>();
+    RECEIVER.get_or_init(move || Wrapper::new(receiver));
 
     //--loop thread--
     thread::spawn(move || {
         let sender = sender;
         let input_receiver = init();
         loop {
-            let input = input_receiver.recv();
+            let input = input_receiver.recv().expect("no senders for input (lua init midi)");
 
-            sender
-                .send(input.expect("no senders for input (lua init midi)"))
-                .expect("can not be send (lua init midi)");
+            match sender.send(input){
+                Ok(_)=> (),
+                Err(e) =>{println!("{e} :sender.send(input)")}
+            }
+                
         }
     });
     //--loop thread -- end
     Ok(())
 }
 
-//renvoie None ou les inputs d'un buffer
+//renvoie les inputs du buffer
 fn lua_get_inputs(lua: &Lua, _: ()) -> LuaResult<LuaTable> {
     // TODO: handle panic
     let receiver = RECEIVER.get().unwrap();
 
     let buffer_table = lua.create_table()?;
 
-    while let Ok(input) = receiver.recv() {
+    while let Ok(input) = receiver.try_recv() {
         buffer_table.set(
             buffer_table.len().expect("error len lua get inputs") + 1,
             midi_input_to_table(lua, &input)?,
@@ -111,7 +113,6 @@ fn midi_input_to_table<'a>(lua: &'a Lua, input: &'a MidiInputPressed) -> LuaResu
             midival_into_table(&input_table, midi_val, "Knob".to_string())?
         }
         MidiInputPressed::Unknown(midi_val) => {
-            //TODO unknow -> unknown
             input_table.set("midi_type", "unknown")?;
             input_table.set("id", *midi_val)?;
         }

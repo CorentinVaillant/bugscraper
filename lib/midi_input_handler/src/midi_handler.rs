@@ -85,24 +85,25 @@ impl MidiInputPressed {
 
 fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>) {
     let message = MidiMessage::from(data);
-    #[cfg(debug_assertions)]
-    print!("\nreceived midi data  -> {:?}", data);
+    // #[cfg(debug_assertions)]
+    // print!("\nreceived midi data  -> {:?}", data);
     match message {
         MidiMessage::NoteOn(channel, key) => {
             let note: Note = Note::from(key, channel);
-            #[cfg(debug_assertions)]
-            println!("{} on channel : {channel:?} ", note.to_string());
+            // #[cfg(debug_assertions)]
+            // println!("{} on channel : {channel:?} ", note.to_string());
+            sender.send(MidiInputPressed::Note(note)).unwrap(); //TODO HANDLE UNWRAP !!
         }
         MidiMessage::NoteOff(channel, key) => {
             let note: Note = Note::from(key, channel);
-            #[cfg(debug_assertions)]
-            println!("{} on channel : {channel:?} ", note.to_string());
+            // #[cfg(debug_assertions)]
+            // println!("{} on channel : {channel:?} ", note.to_string());
             sender.send(MidiInputPressed::Note(note)).unwrap(); //TODO HANDLE UNWRAP !!
         }
 
-        MidiMessage::PitchBend(channel, x, y) => {
-            #[cfg(debug_assertions)]
-            println!("pitch bend : ({x},{y}) on channel : {channel:?}");
+        MidiMessage::PitchBend(channel, _x, y) => {
+            // #[cfg(debug_assertions)]
+            // println!("pitch bend : ({x},{y}) on channel : {channel:?}");
             let axis = MidiValue {
                 value: -(y as i16) * 2,
 
@@ -113,11 +114,11 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
         }
 
         MidiMessage::PolyKeyPressure(channel, key) => {
-            #[cfg(debug_assertions)]
-            println!(
-                "polykey pressure : ({:?}) on channel : {channel:?}",
-                key.key
-            );
+            // #[cfg(debug_assertions)]
+            // println!(
+            //     "polykey pressure : ({:?}) on channel : {channel:?}",
+            //     key.key
+            // );
             let axis = MidiValue {
                 value: key.value as i16,
                 key: key.key,
@@ -127,11 +128,11 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
         }
 
         MidiMessage::ControlChange(channel, controle) => {
-            #[cfg(debug_assertions)]
-            println!(
-                "control change : ({:?}) -> ({:?}) on channel : {channel:?}",
-                controle.control, controle.value
-            );
+            // #[cfg(debug_assertions)]
+            // println!(
+            //     "control change : ({:?}) -> ({:?}) on channel : {channel:?}",
+            //     controle.control, controle.value
+            // );
             let knob = MidiValue {
                 value: i16::from(controle.value),
                 key: controle.control,
@@ -141,8 +142,8 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
         }
 
         _ => {
-            #[cfg(debug_assertions)]
-            println!("unknow message received ! data : {:?}", data);
+            // #[cfg(debug_assertions)]
+            // println!("unknow message received ! data : {:?}", data);
             let mut val: u16 = 0;
             for (i, n) in (0_u8..).zip(data.iter()) {
                 val += (*n as u16) << (8 * i);
@@ -157,7 +158,7 @@ pub fn init() -> Receiver<MidiInputPressed> {
 
     let (sender, receiver) = channel::<MidiInputPressed>();
     thread::spawn(move || {
-        let sender = sender;
+        let sender: Sender<MidiInputPressed> = sender;
         let midi_input: MidiInput = match MidiInput::new("input") {
             Ok(result) => result,
             Err(e) => panic!("{}", e),
