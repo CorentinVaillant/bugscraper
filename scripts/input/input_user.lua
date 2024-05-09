@@ -128,6 +128,7 @@ end
 
 function InputUser:is_button_down(button, is_ui_action)
     is_ui_action = param(is_ui_action, false)
+    midi.update_input() --toremove
 
     local is_down = false
     if button.type == INPUT_TYPE_KEYBOARD then
@@ -141,7 +142,7 @@ function InputUser:is_button_down(button, is_ui_action)
         end
 --CORENTIN
     elseif button.type == INPUT_TYPE_MIDI then
-        midi.update_input()
+        --midi.update_input()
         if self.midi_controller then 
             is_down = midi.is_midi_down(button)
         end

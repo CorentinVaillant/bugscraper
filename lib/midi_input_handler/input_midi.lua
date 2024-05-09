@@ -27,9 +27,15 @@ function midilib.update_input()
     end
 
     for _, value in pairs(inputs) do
-        local key_name = "m_"+tostring(value.note) +"-"+ tostring(value.oct) +"ch"+ tostring(value.channel)
-        print(key_name)
-        input_buffer[key_name] = value.velocity
+        if value.midi_type == "note"then    
+            local key_name = concat("m_note",tostring(value.note) ,"-", tostring(value.oct) ,"ch", tostring(value.channel))
+            print(key_name)
+            input_buffer[key_name] = value["velocity"]
+        else
+            local key_name = concat("m_",value["midi_type"],"-",tostring(value.key),"ch",tostring(value.channel))
+            print(key_name)
+            input_buffer[key_name] = value["value"]
+        end
     end
     print_table(input_buffer)
 end

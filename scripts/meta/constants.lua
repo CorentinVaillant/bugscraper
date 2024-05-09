@@ -137,6 +137,7 @@ MAX_ASSIGNABLE_BUTTONS = 8
 
 INPUT_TYPE_KEYBOARD = "k"
 INPUT_TYPE_CONTROLLER = "c"
+INPUT_TYPE_MIDI = "m"
 
 BUTTON_STYLE_SWITCH = "switch"
 BUTTON_STYLE_PLAYSTATION4 = "playstation4"
@@ -187,7 +188,7 @@ RAW_INPUT_MAP_DEFAULT_GLOBAL = {
     right =     {},
     up =        {},
     down =      {},
-    jump =      {"k_c", "k_b", "c_a", "c_b"},
+    jump =      {"k_c", "k_b", "c_a", "c_b","m_note0-4ch1"},
     shoot =     {},
     
     pause =     {},
