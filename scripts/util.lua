@@ -190,30 +190,6 @@ function ternary(cond, t, f)
 	return f
 end
 
--- function draw_centered(spr, x, y, r, sx, sy, ox, oy, color)
--- 	local w = spr:getWidth() or 0
--- 	local h = spr:getHeight() or 0
--- 	local col = color or {1,1,1}
--- 	if spr == nil then spr = spr_missing end 
-
--- 	if (camera.x-w < x) and (x < camera.x+window_w+w) 
--- 	and (camera.y-h < y) and (y < camera.y+window_h+h) then
--- 		x = floor(x)
--- 		y = floor(y)
--- 		r = r or 0
--- 		sx = sx or PIXEL_SCALE
--- 		sy = sy or sx
--- 		ox = ox or 0
--- 		oy = oy or 0
-
--- 		ox = floor(ox + spr:getWidth()/2)
--- 		oy = floor(oy + spr:getHeight()/2)
--- 		love.graphics.setColor(col)
--- 		love.graphics.draw(spr, x, y, r, sx, sy, ox, oy)
--- 		love.graphics.setColor(1,1,1)
--- 	end
--- end
-
 function exec_on_canvas(canvas, func)
 	local old_canvas = love.graphics.getCanvas()
 	love.graphics.setCanvas(canvas)
@@ -250,7 +226,8 @@ function draw_with_selected_outline(spr, x, y, r, sx, sy)
 	love.graphics.draw(spr, x, y, r, sx, sy)
 end
 
-function draw_with_outline(outline_color, spr, x, y, r, sx, sy, ox, oy)
+function draw_with_outline(outline_color, outline_type, spr, x, y, r, sx, sy, ox, oy)
+	outline_type = outline_type or "round"
 	ox = ox or 0
 	oy = oy or 0
 
@@ -264,10 +241,12 @@ function draw_with_outline(outline_color, spr, x, y, r, sx, sy, ox, oy)
 		love.graphics.draw(spr, x, y, r, sx, sy, ox,       oy+offset)
 		love.graphics.draw(spr, x, y, r, sx, sy, ox,       oy-offset)
 	
-		love.graphics.draw(spr, x, y, r, sx, sy, ox+offset, oy+offset)
-		love.graphics.draw(spr, x, y, r, sx, sy, ox-offset, oy+offset)
-		love.graphics.draw(spr, x, y, r, sx, sy, ox+offset, oy-offset)
-		love.graphics.draw(spr, x, y, r, sx, sy, ox-offset, oy-offset)
+		if outline_type == "square" then
+			love.graphics.draw(spr, x, y, r, sx, sy, ox+offset, oy+offset)
+			love.graphics.draw(spr, x, y, r, sx, sy, ox-offset, oy+offset)
+			love.graphics.draw(spr, x, y, r, sx, sy, ox+offset, oy-offset)
+			love.graphics.draw(spr, x, y, r, sx, sy, ox-offset, oy-offset)
+		end
 		
 		love.graphics.setShader()
 		love.graphics.draw(spr, x, y, r, sx, sy, ox, oy)
@@ -275,7 +254,7 @@ function draw_with_outline(outline_color, spr, x, y, r, sx, sy, ox, oy)
 end
 
 function draw_centered(spr, x, y, r, sx, sy)
-	love.graphics.draw(spr, math.floor(x), math.floor(y), r, sx, sy, spr:getWidth()/2, spr:getHeight()/2)
+	love.graphics.draw(spr, math.floor(x), math.floor(y), r, sx, sy, math.floor(spr:getWidth()/2), math.floor(spr:getHeight()/2))
 end
 
 function draw_centered_text(text, rect_x, rect_y, rect_w, rect_h, rot, sx, sy, font)
@@ -817,6 +796,16 @@ function cerp(a,b,t)
 	-- 2024 leo here: wtf is this shit
 	if abs(a-b) <= t then    return b    end
 	return a + sign0(b-a)*t
+end
+
+function move_toward_color(a, b, t)
+	local c = {
+		move_toward(a[1], b[1], t),
+		move_toward(a[2], b[2], t),
+		move_toward(a[3], b[3], t),
+		move_toward(a[4] or 1, b[4] or 1, t),
+	}
+	return c
 end
 
 function move_toward(from, to, delta)

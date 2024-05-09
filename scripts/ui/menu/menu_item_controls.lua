@@ -43,7 +43,7 @@ end
 
 function ControlsMenuItem:draw_value_text()
 	local right_bound = self.x + MENU_PADDING + self.ox
-	local y = self.y + self.oy
+	local y = math.floor(self.y + self.oy + 2)
 
 	local draw_func = self:get_leftjustified_text_draw_function()
 	if self.is_waiting_for_input then
@@ -58,9 +58,11 @@ function ControlsMenuItem:draw_value_text()
 
 	else
 		local x = right_bound
-		for i, button in pairs(self.value) do
+		local i = 1
+		for _, button in pairs(self.value) do
 			if button.type == self.input_type then
-				x = self:draw_button_icon(button, x, y)
+				x = self:draw_button_icon(i, button, x, y)
+				i = i + 1
 			end
 		end
 	end
@@ -68,14 +70,19 @@ end
 
 local BUTTON_ICON_MARGIN = 1
 
-function ControlsMenuItem:draw_button_icon(button, x, y)
+function ControlsMenuItem:draw_button_icon(i, button, x, y)
 	local img = Input:get_button_icon(self.player_n, button)
 
 	if img ~= nil then
 		local icon_draw_func = ternary(self.is_selected,
-			function(_img, _x, _y) draw_with_outline(Input:get_last_ui_player_color(), _img, _x, _y) end,
+			function(_img, _x, _y) draw_with_outline(Input:get_last_ui_player_color(), "round", _img, _x, _y) end,
 			function(_img, _x, _y) love.graphics.draw(_img, _x, _y) end
 		)
+		if i == 1 then
+			icon_draw_func = function(_img, _x, _y) 
+				draw_with_outline(COL_WHITE, "round", _img, _x, _y) 
+			end
+		end
 
 		local width = img:getWidth()
 		local height = img:getHeight()
@@ -133,6 +140,7 @@ function ControlsMenuItem:gamepadaxis(joystick, axis, value)
 	local user_n = ternary(Input:get_user(self.player_n) == nil, Input:get_joystick_user_n(joystick), self.player_n)
 
 	local key_name = Input:axis_to_key_name(axis, value)
+	print_debug(axis)
 	if Input:is_axis_down(user_n, key_name) then
 		self:on_button_pressed(InputButton:new(INPUT_TYPE_CONTROLLER, key_name))
 	end
@@ -164,6 +172,7 @@ function ControlsMenuItem:on_button_pressed(button)
 		
 		self.scancode = button.key_name
 		Input:add_action_button(self.profile_id, self.action_name, button)
+		Input:update_controls_file(self.profile_id)
 		
 		self.value = self:get_buttons()
 	end

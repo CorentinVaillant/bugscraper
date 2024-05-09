@@ -37,7 +37,9 @@ function InputManager:init()
         ["keyboard_split_p2"] = InputProfile:new("keyboard_split_p2", INPUT_TYPE_KEYBOARD, self.default_mapping_split_kb_p2),
     }
 
+    -- Load user-defined controls
     self:load_controls()
+    self:load_global_mappings()
 end
 
 function InputManager:init_users()
@@ -46,12 +48,6 @@ end
 
 function InputManager:can_add_user()
     return self:get_number_of_users() < MAX_NUMBER_OF_PLAYERS
-    -- if input_type == INPUT_TYPE_CONTROLLER then 
-    -- elseif input_type == INPUT_TYPE_KEYBOARD then 
-    --     return (self:get_number_of_users() < MAX_NUMBER_OF_PLAYERS) and 
-    --         self:get_number_of_users(INPUT_TYPE_KEYBOARD) < 1
-    -- end
-    -- return true
 end
 
 function InputManager:get_number_of_users(input_type)
@@ -180,9 +176,10 @@ function InputManager:gamepadaxis(joystick, axis, value)
 end
 
 function InputManager:axis_to_key_name(axis, value)
-    local code = tostring(axis)..ternary(value > 0, "+", "-")
-    local name = AXIS_TO_KEY_NAME_MAP[code]
-    return name
+    if axis == "triggerleft" or axis == "triggerright" then
+        return axis
+    end
+    return tostring(axis)..ternary(value > 0, "pos", "neg")
 end
 
 function InputManager:get_axis_angle(joystick, axis_x, axis_y) 
@@ -359,8 +356,6 @@ function InputManager:add_action_button(profile_id, action, new_button)
 
     local current_buttons = profile:get_buttons(action)
     table.insert(current_buttons, new_button)
-
-	self:update_controls_file(profile_id)
 end
 
 function InputManager:mark_action_as_handled(player_n, action)
@@ -685,6 +680,41 @@ end
 
 function InputManager:on_quit()
     self:update_all_controls_files()
+end
+
+function InputManager:load_global_mappings()
+    -- local actions = {
+    --     "pause",
+    --     "ui_select",
+    --     "ui_back",
+    --     "ui_left",
+    --     "ui_right",
+    --     "ui_up",
+    --     "ui_down",
+    --     "ui_reset_keys",
+    -- }
+    -- local users = {
+    --     "pause",
+    --     "ui_select",
+    --     "ui_back",
+    --     "ui_left",
+    --     "ui_right",
+    --     "ui_up",
+    --     "ui_down",
+    --     "ui_reset_keys",
+    -- }
+
+    -- for _, user in pairs(users) do
+    --     for __, action in pairs(actions) do
+    --         self:add_action_button()
+    --     end
+    -- end
+end
+
+function InputManager:vibrate(user_n, duration, strength_left, strength_right)
+    local user = self:get_user(user_n)
+    if user == nil then return end
+    user:vibrate(duration, strength_left, strength_right)
 end
 
 return InputManager

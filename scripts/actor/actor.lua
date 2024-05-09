@@ -1,4 +1,5 @@
 local Class = require "scripts.meta.class"
+local Sprite = require "scripts.graphics.sprite"
 
 local Actor = Class:inherit()
 
@@ -26,8 +27,6 @@ function Actor:init_actor(x, y, w, h, spr, args)
 	self.vx = 0
 	self.vy = 0
 
-	self.rot = 0
-
 	self.default_gravity = 20
 	self.gravity = self.default_gravity
 	self.gravity_cap = 400
@@ -51,16 +50,13 @@ function Actor:init_actor(x, y, w, h, spr, args)
 	self:add_collision()
 	
 	-- Visuals
+	self.spr = Sprite:new()
 	self.draw_shadow = true
 	if spr then
-		self:set_sprite(spr)
+		self:set_image(spr)
 	end
 
-	self.spr_x = 0
-	self.spr_y = 0
-	self.spr_ox = 0
-	self.spr_oy = 0
-	self.center_sprite = false
+	self.outline_color = nil
 
 	self.anim_frame_len = 0.2
 	self.anim_t = random_range(0, self.anim_frame_len)
@@ -97,31 +93,34 @@ function Actor:set_active(val)
 	self.is_active = val
 end
 
-function Actor:set_sprite(spr)
-	self.spr = spr
-	self.spr_w = self.spr:getWidth()
-	self.spr_h = self.spr:getHeight()
-	self:update_sprite_offset()
+function Actor:set_image(image)
+	self.spr:set_image(image)
 end
 
-function Actor:update_sprite_offset()
-	self.spr_centering_ox = floor((self.spr_w - self.w) / 2)
-	if self.center_sprite then
-		self.spr_centering_oy = floor((self.spr_h - self.h) / 2)
-	else
-		self.spr_centering_oy = self.spr_h - self.h
-	end
+function Actor:update_sprite_position()
+	-- Sprite
+	-- local spr_w2 = floor(self.spr.image:getWidth() / 2)
+	-- local spr_h2 = floor(self.spr.image:getHeight() / 2)
+
+	-- local ox = math.floor(spr_w2)-- - self.spr_centering_ox)
+	-- local oy = math.floor(spr_h2)-- - self.spr_centering_oy)
+	-- self.spr:update_offset(ox, oy)
 end
 
 function Actor:set_size(w, h)
 	self.w = w or self.w
 	self.h = h or self.h
-	self:update_sprite_offset()
 end
 
 function Actor:center_actor()
 	self.x = self.x - self.w/2
 	self.y = self.y - self.h/2
+end
+
+function Actor:clamp_to_bounds(rect)
+	local x = clamp(self.x, rect.ax, rect.bx-self.w)
+	local y = clamp(self.y, rect.ay, rect.by-self.h)
+	self:set_pos(x, y)
 end
 
 function Actor:update_mid_position()
@@ -147,7 +146,6 @@ end
 function Actor:update_actor(dt)
 	if self.is_removed then   return   end
 	self:do_gravity(dt)
-	self:update_sprite_offset()
 
 	-- apply friction
 	self.vx = self.vx * self.friction_x
@@ -194,7 +192,7 @@ function Actor:update_actor(dt)
 			self.anim_t = self.anim_t - self.anim_frame_len
 			self.anim_cur_frame = mod_plus_1((self.anim_cur_frame + 1), #self.anim_frames)
 		end
-		self.spr = self.anim_frames[self.anim_cur_frame]
+		self.spr:set_image(self.anim_frames[self.anim_cur_frame])
 	end
 
 	self:update_sprite_position()
@@ -210,40 +208,15 @@ function Actor:update_actor(dt)
     end
 end
 
-function Actor:update_sprite_position()
-	-- Sprite
-	local spr_w2 = floor(self.spr:getWidth() / 2)
-	local spr_h2 = floor(self.spr:getHeight() / 2)
-
-	local x = self.x + spr_w2 - self.spr_centering_ox
-	local y = self.y + spr_h2 - self.spr_centering_oy
-	self.spr_x = floor(x)
-	self.spr_y = floor(y)
-end
-
 function Actor:draw()
 	error("draw not implemented")
 end
 
-function Actor:draw_actor(flip_x, flip_y, custom_draw)
+function Actor:draw_actor(custom_draw)
 	if self.is_removed then   return   end
-	
-	-- f : flip
-	-- fix this, this is dumb
-	if flip_x == true then   flip_x = -1   elseif flip_x == false then   flip_x = 1 end
-	if flip_y == true then   flip_y = -1   elseif flip_y == false then   flip_y = 1 end
 
-	flip_x = (flip_x or 1)*self.sx
-	flip_y = (flip_y or 1)*self.sy
-
-	local spr_w2 = floor(self.spr:getWidth() / 2)
-	local spr_h2 = floor(self.spr:getHeight() / 2)
-
-	local x, y = self.spr_x, self.spr_y
 	if self.spr then
-		local drw_func = gfx.draw
-		if custom_draw then    drw_func = custom_draw    end
-		drw_func(self.spr, x, y, self.rot, flip_x, flip_y, spr_w2 - self.spr_ox, spr_h2 - self.spr_oy)
+		self.spr:draw(self.x, self.y, self.w, self.h, custom_draw)
 	end
 end
 
@@ -289,14 +262,21 @@ function Actor:set_flying(bool)
 	end
 end
 
-function Actor:do_knockback(q, source, ox, oy)
+function Actor:do_knockback_from(q, source, ox, oy)
 	if not self.is_knockbackable then    return    end
 
 	ox, oy = ox or 0, oy or 0
 	--if not source then    return    end
-	local ang = atan2(source.y-self.y + oy, source.x-self.x + ox)
-	self.vx = self.vx - cos(ang)*q
-	self.vy = self.vy - sin(ang)*q
+	local knockback_x, knockback_y = normalize_vect(source.x-self.x + ox, source.y-self.y + oy)
+	self:do_knockback(q, -knockback_x, -knockback_y)
+end
+
+function Actor:do_knockback(q, force_x, force_y)
+	if not self.is_knockbackable then    return    end
+
+	force_x, force_y = normalize_vect(force_x, force_y)
+	self.vx = self.vx + force_x * q
+	self.vy = self.vy + force_y * q
 end
 
 -- When the enemy is buffered for the next wave of enemies
@@ -345,7 +325,7 @@ end
 
 function Actor:set_pos(x, y)
 	self.x = x
-	self.y = y
+	self.y = y 
 	Collision:update(self, x, y)
 end
 

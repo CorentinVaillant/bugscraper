@@ -12,22 +12,38 @@ require "scripts.util"
 local midi = require("lib.midi_input_handler.libmidi_input_handler")
     
 
-
 local Class = require "scripts.meta.class"
 
+local input_buffer = {}
 
 local midilib = {}
 
+
 function midilib.update_input()
 
-    local input = midi.get_inputs()
-    if #input ~= 0 then
-        print_table(input)
+    local inputs = midi.get_inputs()
+    if #inputs == 0 then
+        return
     end
+
+    for _, value in pairs(inputs) do
+        local key_name = "m_"+tostring(value.note) +"-"+ tostring(value.oct) +"ch"+ tostring(value.channel)
+        print(key_name)
+        input_buffer[key_name] = value.velocity
+    end
+    print_table(input_buffer)
 end
 
 function midilib.init_midi()
     midi.init_midi()
+end
+
+function midilib.is_midi_down(button)
+    if input_buffer[button] == nil or input_buffer[button] == 0 then
+        return false    
+    else
+        return true
+    end
 end
 
 

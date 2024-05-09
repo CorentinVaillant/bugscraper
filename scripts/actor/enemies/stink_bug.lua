@@ -26,11 +26,11 @@ function StinkBug:init_fly(x, y, spr)
 
     self.gravity = 0
     self.friction_y = self.friction_x
-    self.center_sprite = true
 
     self.anim_frame_len = 0.05
     self.anim_frames = {images.stink_bug_1, images.stink_bug_1}
     self.do_vx_flipping = false
+    self.spr:set_anchor(SPRITE_ANCHOR_CENTER_CENTER)
     
     self.sound_death = "stink_bug_death"
     self.sound_stomp = "stink_bug_death"
@@ -48,7 +48,7 @@ function StinkBug:update_stink_bug(dt)
 	self.vx = self.vx + math.cos(self.direction) * self.speed
 	self.vy = self.vy + math.sin(self.direction) * self.speed
 
-    self.rot = self.direction
+    self.spr:set_rotation(self.direction)
 end
 
 function StinkBug:draw()
@@ -67,8 +67,8 @@ end
 
 function StinkBug:on_death()
     for i = 1, random_range_int(3, 5) do
-        local spawn_x = clamp(self.mid_x - 10, game.level.cabin_ax, game.level.cabin_bx - 20)
-        local spawn_y = clamp(self.mid_y - 10, game.level.cabin_ay, game.level.cabin_by - 20)
+        local spawn_x = clamp(self.mid_x - 10, game.level.cabin_rect.ax, game.level.cabin_rect.bx - 20)
+        local spawn_y = clamp(self.mid_y - 10, game.level.cabin_rect.ay, game.level.cabin_rect.by - 20)
         local cloud = PoisonCloud:new(spawn_x, spawn_y)
 
         local d = random_range(0, pi2)

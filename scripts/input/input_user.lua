@@ -5,15 +5,17 @@ local InputActionState = require "scripts.input.input_action_state"
 local gamepadguesser = require "lib.gamepadguesser"
 gamepadguesser.loadMappings("lib/gamepadguesser")
 
-
 local InputUser = Class:inherit()
-
-
+ 
+--Corentin
+local midi = require("lib.midi_input_handler.input_midi")
+midi.init_midi()
+--
 function InputUser:init(n, input_profile_id, is_global)
     is_global = param(is_global, false)
 
-    self.n = n --player numb
-    self.is_global = is_global 
+    self.n = n
+    self.is_global = is_global
     self.input_profile_id = input_profile_id or "empty"
 
     self.action_states = {}
@@ -25,15 +27,18 @@ function InputUser:init(n, input_profile_id, is_global)
     self.primary_input_type = self:get_input_profile():get_primary_input_type()
 --Corentin    
     self.midi_controller = nil
+--
 
-    --midi.init_midi()
----
+    self.vibration_timer = 0.0
+    self.vibration_strength_left  = 0.0
+    self.vibration_strength_right = 0.0
 end
 
 function InputUser:update(dt)
     for action, action_state in pairs(self.action_states) do
         action_state:update(dt)
 	end
+    self:update_vibration(dt)
 end
 
 function InputUser:get_primary_input_type()
@@ -136,10 +141,9 @@ function InputUser:is_button_down(button, is_ui_action)
         end
 --CORENTIN
     elseif button.type == INPUT_TYPE_MIDI then
+        midi.update_input()
         if self.midi_controller then 
-            is_down = self:is_joystick_down(button, self.joystick, is_ui_action) --!is midi down
-        elseif self.is_global then
-            is_down = self:is_any_joystick_down(button, is_ui_action) --!is is_any_midi_down 
+            is_down = midi.is_midi_down(button)
         end
         --!TODO
     end
@@ -184,18 +188,18 @@ function InputUser:is_any_joystick_down(button, is_ui_action)
 end
 
 local axis_functions = {
-    leftstickxpos =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, 0,     margin) end,
-    leftstickxneg =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, pi,    margin) end,
-    leftstickypos =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, pi/2,  margin) end,
-    leftstickyneg =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, -pi/2, margin) end,
+    leftxpos =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, 0,     margin) end,
+    leftxneg =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, pi,    margin) end,
+    leftypos =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, pi/2,  margin) end,
+    leftyneg =  function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 1, 2, AXIS_DEADZONE, -pi/2, margin) end,
 
-    rightstickxpos = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, 0,     margin) end,
-    rightstickxneg = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, pi,    margin) end,
-    rightstickypos = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, pi/2,  margin) end,
-    rightstickyneg = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, -pi/2, margin) end,
+    rightxpos = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, 0,     margin) end,
+    rightxneg = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, pi,    margin) end,
+    rightypos = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, pi/2,  margin) end,
+    rightyneg = function(joystick, margin) return Input:is_axis_in_angle_range(joystick, 3, 4, AXIS_DEADZONE, -pi/2, margin) end,
 
-    lefttrigger =    function(joystick, margin) return joystick:getAxis(5) > -1 + TRIGGER_DEADZONE end,
-    righttrigger =   function(joystick, margin) return joystick:getAxis(6) > -1 + TRIGGER_DEADZONE end,
+    triggerleft =    function(joystick, margin) return joystick:getAxis(5) > -1 + TRIGGER_DEADZONE end,
+    triggerright =   function(joystick, margin) return joystick:getAxis(6) > -1 + TRIGGER_DEADZONE end,
 }
 
 function InputUser:is_axis_down(axis_name, joystick, is_ui_axis)
@@ -234,6 +238,28 @@ end
 
 function InputUser:set_button_style(style)
     Options:set_button_style(self.n, style)
+end
+
+function InputUser:vibrate(duration, strength_left, strength_right)
+    strength_right = param(strength_right, strength_left)
+    
+    if not self.joystick then 
+        return
+    end
+    self.vibration_timer = math.max(self.vibration_timer, duration)
+    self.vibration_strength_left  = strength_left
+    self.vibration_strength_right = strength_right
+end
+
+function InputUser:update_vibration(dt)
+    if self.joystick then
+        if self.vibration_timer <= 0 then
+            self.vibration_strength_left, self.vibration_strength_right = 0, 0 
+        end
+        self.joystick:setVibration(self.vibration_strength_left, self.vibration_strength_right) 
+    end
+    
+    self.vibration_timer = math.max(self.vibration_timer - dt, 0.0)
 end
 
 return InputUser

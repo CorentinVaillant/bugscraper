@@ -19,10 +19,6 @@ function PongBall:init_pong_ball(x, y, spr)
     self.follow_player = false
     self.do_stomp_animation = false
 
-    self.destroy_bullet_on_impact = false
-    self.is_bouncy_to_bullets = true
-    self.is_immune_to_bullets = true
-
     self.rot_speed = 3
 
     self.gravity = 0
@@ -31,9 +27,7 @@ function PongBall:init_pong_ball(x, y, spr)
 
     self:init_pong()
     
-    self.center_sprite = true
-    -- self.spr_oy = floor((self.spr_h - self.h) / 2)
-    self:update_sprite_offset()
+    self.spr:set_anchor(SPRITE_ANCHOR_CENTER_CENTER)
 end
 
 function PongBall:init_pong(speed)
@@ -50,7 +44,7 @@ end
 
 function PongBall:update_pong_ball(dt)
     self:update_enemy(dt)
-    self.rot = self.rot + self.rot_speed * dt
+    self.spr:set_rotation(self.spr.rot + self.rot_speed * dt)
 
     if self.is_ponging then
         self.vx = (self.pong_vx or 0)

@@ -11,6 +11,8 @@ pub const ENGLISH_NOTE_TABLE: [&str; 12] = [
     "C", "C#", "D", "D#", "E", "F", "F#", "F", "F#", "A", "A#", "B",
 ];
 
+type Connection = MidiInputConnection<Sender<MidiInputPressed>>;
+
 pub struct Note {
     pub oct: u8,
     pub note: u8,
@@ -84,21 +86,22 @@ impl MidiInputPressed {
 }
 
 fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>) {
+    
     let message = MidiMessage::from(data);
     // #[cfg(debug_assertions)]
     // print!("\nreceived midi data  -> {:?}", data);
     match message {
         MidiMessage::NoteOn(channel, key) => {
             let note: Note = Note::from(key, channel);
-            // #[cfg(debug_assertions)]
-            // println!("{} on channel : {channel:?} ", note.to_string());
-            sender.send(MidiInputPressed::Note(note)).unwrap(); //TODO HANDLE UNWRAP !!
+            #[cfg(debug_assertions)]
+            println!("{} on channel : {channel:?} ", note.to_string());
+            sender.send(MidiInputPressed::Note(note)).expect("corresponding receiver has already been deallocated (callback)");
         }
         MidiMessage::NoteOff(channel, key) => {
             let note: Note = Note::from(key, channel);
             // #[cfg(debug_assertions)]
             // println!("{} on channel : {channel:?} ", note.to_string());
-            sender.send(MidiInputPressed::Note(note)).unwrap(); //TODO HANDLE UNWRAP !!
+            sender.send(MidiInputPressed::Note(note)).expect("corresponding receiver has already been deallocated (callback)");
         }
 
         MidiMessage::PitchBend(channel, _x, y) => {
@@ -110,7 +113,7 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
                 key: 0,
                 channel,
             };
-            sender.send(MidiInputPressed::JoystickX(axis)).unwrap(); //TODO HANDLE UNWRAP !!
+            sender.send(MidiInputPressed::JoystickX(axis)).expect("corresponding receiver has already been deallocated (callback)");
         }
 
         MidiMessage::PolyKeyPressure(channel, key) => {
@@ -124,7 +127,7 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
                 key: key.key,
                 channel,
             };
-            sender.send(MidiInputPressed::JoystickX(axis)).unwrap(); //TODO HANDLE UNWRAP !!
+            sender.send(MidiInputPressed::JoystickX(axis)).expect("corresponding receiver has already been deallocated (callback)");
         }
 
         MidiMessage::ControlChange(channel, controle) => {
@@ -138,7 +141,7 @@ fn callback(_timestamp: u64, data: &[u8], sender: &mut Sender<MidiInputPressed>)
                 key: controle.control,
                 channel,
             };
-            sender.send(MidiInputPressed::Knob(knob)).unwrap(); //TODO HANDLE UNWRAP !!
+            sender.send(MidiInputPressed::Knob(knob)).expect("corresponding receiver has already been deallocated (callback)");
         }
 
         _ => {
@@ -169,28 +172,24 @@ pub fn init() -> Receiver<MidiInputPressed> {
         let ports_nb = midi_input.port_count();
         println!("{} ports avalaibles", ports_nb);
 
-        let mut connections: Vec<MidiInputConnection<Sender<MidiInputPressed>>> =
-            init_connections(&midi_input, &sender);
+        let mut connections: Vec<Connection> =
+            init_all_connections(&midi_input, &sender);
 
-        // TODO: faire un truc comme ça (pour eviter les deco/reco forcer des périfs) 
-        // connection de base: [0, 1, 2, 3]
-        // apres T temps: [0, 1, 3, 4]
-        // tableau de diff (entre les 2 tabs du dessus): [2(deconnection), 4(connection)]
         loop {
             //TODO stop active loop
             if connections.len() != midi_input.port_count() {
-                connections = init_connections(&midi_input, &sender);
+                connections = init_all_connections(&midi_input, &sender);
             }
         }
     });
     receiver
 }
 
-fn init_connections(
+fn init_all_connections(
     midi_input: &MidiInput,
     sender: &Sender<MidiInputPressed>,
-) -> Vec<MidiInputConnection<Sender<MidiInputPressed>>> {
-    let mut return_vec: Vec<MidiInputConnection<Sender<MidiInputPressed>>> = Vec::new();
+) -> Vec<Connection> {
+    let mut return_vec: Vec<Connection> = Vec::new();
 
     for port in midi_input.ports() {
         let port_name = midi_input
@@ -209,3 +208,4 @@ fn init_connections(
 
     return_vec
 }
+

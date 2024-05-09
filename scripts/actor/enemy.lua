@@ -28,6 +28,7 @@ function Enemy:init_enemy(x,y, img, w,h)
 
 	self.harmless_frames = 0
 
+	self.kill_when_negative_life = true
 	self.max_life = 10
 	self.life = self.max_life
 	self.color = COL_BLUE
@@ -80,10 +81,7 @@ function Enemy:update_enemy(dt)
 	self:follow_nearest_player(dt)
 	self.harmless_frames = max(self.harmless_frames - dt, 0)
 	self.damaged_flash_timer = max(self.damaged_flash_timer - dt, 0)
-
-	if self.life <= 0 then
-		self:remove()
-	end
+	self.spr:set_flip_x(ternary(self.do_vx_flipping, self.vx < 0, false))
 end
 function Enemy:update(dt)
 	self:update_enemy(dt)
@@ -124,8 +122,8 @@ function Enemy:follow_nearest_player(dt)
 end
 
 function Enemy:draw_enemy()
-	local f = (self.damaged_flash_timer > 0) and draw_white or gfx.draw
-	self:draw_actor(ternary(self.do_vx_flipping, self.vx < 0, false), nil, f)
+	local f = (self.damaged_flash_timer > 0) and draw_white
+	self:draw_actor(f)
 
 	if game.debug.info_view then
 		gfx.draw(images.heart, self.x-7 -2+16, self.y-16)
@@ -159,7 +157,8 @@ function Enemy:on_collision(col, other)
 			player.vy = 0
 			player:on_stomp(self)
 			if self.do_stomp_animation then
-				Particles:stomped_enemy(self.spr_x, self.spr_y, self.spr)
+				local ox, oy = self.spr:get_total_centered_offset_position(self.x, self.y, self.w, self.h)
+				Particles:stomped_enemy(self.mid_x, self.y+self.h, self.spr.image)
 			end
 			self:on_stomped(player)
 			if self.is_killed_on_stomp then
@@ -178,8 +177,8 @@ function Enemy:on_collision(col, other)
 	
 	-- Being collider push force
 	if col.other.is_being and self.is_pushable and other.is_pushable then
-		self:do_knockback(10, col.other)
-		col.other:do_knockback(10, self)
+		self:do_knockback_from(10, col.other)
+		col.other:do_knockback_from(10, self)
 	end
 
 	self:after_collision(col, col.other)
@@ -198,8 +197,14 @@ function Enemy:do_damage(n, damager)
 	self:on_damage(n, self.life + n)
 
 	if self.life <= 0 then
-		self:kill(damager)
+		if self.kill_when_negative_life then
+			self:kill(damager)
+		end 
+		self:on_negative_life()
 	end
+end
+
+function Enemy:on_negative_life()
 end
 
 function Enemy:on_damage()
@@ -259,7 +264,6 @@ function Enemy:on_hit_bullet(bul, col)
 	self:do_damage(bul.damage, bul)
 	
 	if self.is_knockbackable then
-		-- self:do_knockback(bul.knockback * self.self_knockback_mult, bul)
 		local ang = atan2(bul.vy, bul.vx)
 		self.vx = self.vx + cos(ang) * bul.knockback * self.self_knockback_mult
 		self.vy = self.vy + sin(ang) * bul.knockback * self.self_knockback_mult

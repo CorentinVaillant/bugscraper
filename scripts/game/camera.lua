@@ -9,12 +9,13 @@ function Camera:init()
     self.ox = 0.0
     self.oy = 0.0
     self.zoom = 1.0
+    self.rot = 0.0
     
     self.w = CANVAS_WIDTH
     self.h = CANVAS_HEIGHT
 
     self.min_x, self.max_x = 0, 640
-    self.min_y, self.max_y = 0, 0
+    self.min_y, self.max_y = 0, CANVAS_HEIGHT
     self.target_x = 0.0
     self.target_y = 0.0
 
@@ -32,10 +33,11 @@ end
 
 function Camera:update(dt)
 	if not Options:get("screenshake_on") then self.ox, self.oy = 0,0 end
-
+    
     self:follow_players(dt)  
     self:clamp_camera_position(dt)
     self:follow_target(dt)
+
     -- self:update_screenshake(dt)
 end
 
@@ -146,9 +148,12 @@ end
 
 function Camera:reset()
     self.x = 0
-    self.ox = 0
     self.y = 0
+
+    self.ox = 0
     self.oy = 0
+
+    self.rot = 0
     self.zoom = 1
 end
 
@@ -162,6 +167,7 @@ function Camera:apply_transform()
 
     local x, y = self:get_real_position()
 	love.graphics.translate(math.floor(-x), math.floor(-y))
+    love.graphics.rotate(self.rot)
 	love.graphics.scale(self.zoom)
 end
 

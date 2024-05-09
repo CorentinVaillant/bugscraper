@@ -87,6 +87,37 @@ function ExitSign:activate(player)
     end
 end
 
+function ExitSign:draw()    
+    self.spr:set_image(images.exit_sign)
+    self:draw_enemy()
+
+    if self.is_in_smash_easter_egg then
+        self:draw_smash_easter_egg()
+    end
+    
+    local final_spring_y = math.floor(self.y + self.h + 5 - self.spring_y)
+    local max_spring_y = math.floor(self.y + self.h + 8)
+    local spring_height = images.spring:getHeight()
+
+    for iy = final_spring_y, max_spring_y - spring_height, spring_height do
+        love.graphics.draw(images.spring, math.floor(self.mid_x - images.spring:getWidth()/2), iy)
+    end
+    if final_spring_y < max_spring_y then
+        draw_centered(images.punching_glove, self.mid_x, final_spring_y)
+    end
+
+    self.spr:set_image(images.exit_sign_front)
+    self:draw_enemy()
+
+    -- love.graphics.line(self.mid_x, self.y + self.h, self.mid_x, self.y + self.h - self.spring_ideal_length)
+    -- for i=1, #self.vals-1 do
+    --     local m = 0.6
+    --     love.graphics.line(self.mid_x + i*m + 30, self.mid_y - self.vals[i], self.mid_x + (i + 1)*m + 30, self.mid_y - self.vals[i+1])
+    -- end
+end
+
+------------------------------------------------------------
+
 function ExitSign:draw_smash_easter_egg()
     local colors = {
         COL_BLACK_BLUE,
@@ -108,37 +139,6 @@ function ExitSign:draw_smash_easter_egg()
     -- self:draw_star(self.mid_x, self.y)
 end
 
-function ExitSign:draw()    
-    self.spr = images.exit_sign
-    self:draw_enemy()
-
-    if self.is_in_smash_easter_egg then
-        self:draw_smash_easter_egg()
-    end
-    
-    local final_spring_y = math.floor(self.y + self.h + 5 - self.spring_y)
-    local max_spring_y = math.floor(self.y + self.h + 8)
-    local spring_height = images.spring:getHeight()
-
-    for iy = final_spring_y, max_spring_y - spring_height, spring_height do
-        love.graphics.draw(images.spring, math.floor(self.mid_x - images.spring:getWidth()/2), iy)
-    end
-    if final_spring_y < max_spring_y then
-        draw_centered(images.punching_glove, self.mid_x, final_spring_y)
-    end
-
-    self.spr = images.exit_sign_front
-    self:draw_enemy()
-
-    -- love.graphics.line(self.mid_x, self.y + self.h, self.mid_x, self.y + self.h - self.spring_ideal_length)
-    -- for i=1, #self.vals-1 do
-    --     local m = 0.6
-    --     love.graphics.line(self.mid_x + i*m + 30, self.mid_y - self.vals[i], self.mid_x + (i + 1)*m + 30, self.mid_y - self.vals[i+1])
-    -- end
-end
-
-------------------------------------------------------------
-
 function ExitSign:activate_smash_easter_egg(player)
     self.is_in_smash_easter_egg = true
     
@@ -151,6 +151,7 @@ function ExitSign:activate_smash_easter_egg(player)
     game:set_zoom(2)
     game:set_ui_visible(false)
     game.menu_manager:set_can_pause(false)
+    game.camera:set_y_locked(false)
 
     self:update_star()
 
@@ -194,7 +195,6 @@ function ExitSign:update_smash_easter_egg(dt)
         
         self:update_star()
 
-        -- assert(false)
         for _, star in pairs(self.smash_stars) do
             for i = 1, #star-1, 2 do
                 -- print_ debug(i_star, i, self.smash_stars[i_star][i], self.smash_stars[i_star][i] +1)
@@ -221,10 +221,13 @@ function ExitSign:update_smash_effect_end(dt)
         self.old_camera_x, self.old_camera_y = 0,0
         self:lerp_camera(self.old_camera_x, self.old_camera_y)
         self:lerp_zoom(1)
+
+        -- End smash effect
         if distsqr(0, 0, game:get_camera_position()) <= 0.1 then
             self.pan_camera_to_default = false
             game:set_camera_position(0, 0)
             game:set_zoom(1)
+            game.camera:set_y_locked(true)
             
             game.menu_manager:set_can_pause(true)
         end

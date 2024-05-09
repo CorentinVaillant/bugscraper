@@ -20,8 +20,9 @@ local skins = require "data.skins"
 local sounds = require "data.sounds"
 local utf8 = require "utf8"
 
-require "scripts.util"
 require "scripts.meta.constants"
+require "scripts.util"
+require "scripts.meta.post_constants"
 
 local Game = Class:inherit()
 
@@ -63,7 +64,7 @@ function Game:init()
 	canvas = gfx.newCanvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 	-- Load fonts
-	-- FONT_REGULAR = gfx.newFont("fonts/HopeGold.ttf", 16)
+	-- FONT_REGULAR = gfx.newFont("fonts/Hardpixel.otf", 20)
 	FONT_REGULAR = gfx.newImageFont("fonts/hope_gold.png", FONT_CHARACTERS)
 	FONT_7SEG = gfx.newImageFont("fonts/7seg_font.png", " 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	FONT_MINI = gfx.newFont("fonts/Kenney Mini.ttf", 8)
@@ -112,7 +113,7 @@ function Game:new_game()
 
 	-- Start button
 	local nx = CANVAS_WIDTH * 0.75
-	local ny = self.level.world_generator.box_by * BLOCK_WIDTH
+	local ny = self.level.cabin_inner_rect.by
 	-- local l = create_actor_centered(Enemies.ButtonGlass, nx, ny)
 	local l = create_actor_centered(Enemies.ButtonSmallGlass, floor(nx), floor(ny))
 	self:new_actor(l)
@@ -329,8 +330,8 @@ function Game:update_actors(dt)
 
 		if not actor.is_removed and actor.is_active then
 			actor:update(dt)
+        	actor:clamp_to_bounds(self.level.cabin_inner_rect)
 		end
-
 
 		if actor.is_removed then
 			actor:final_remove()
@@ -474,6 +475,11 @@ function Game:draw_game()
 		self.level:draw_front()
 
 		Particles:draw_front()
+		
+		rect_color(COL_CYAN,  "line", self.level.door_rect.ax, self.level.door_rect.ay, self.level.door_rect.bx-self.level.door_rect.ax, self.level.door_rect.by-self.level.door_rect.ay)
+		rect_color(COL_RED,   "line", self.level.cabin_rect.ax, self.level.cabin_rect.ay, self.level.cabin_rect.bx-self.level.cabin_rect.ax, self.level.cabin_rect.by-self.level.cabin_rect.ay)
+		rect_color(COL_GREEN, "line", self.level.cabin_inner_rect.ax, self.level.cabin_inner_rect.ay, self.level.cabin_inner_rect.bx-self.level.cabin_inner_rect.ax, self.level.cabin_inner_rect.by-self.level.cabin_inner_rect.ay)
+		
 	end)
 
 	-----------------------------------------------------
@@ -662,16 +668,19 @@ function Game:on_player_death(player)
 	self.waves_until_respawn[player.n] = Input:get_number_of_users()
 
 	if self:get_number_of_alive_players() <= 0 then
-		-- Save stats
-		self.menu_manager:set_can_pause(false)
-
-		self.music_player:set_disk("game_over")
-		self.music_player:pause()
-		self:pause_repeating_sounds()
-		self.game_state = GAME_STATE_DYING
-		self.timer_before_game_over = self.max_timer_before_game_over
-		self:save_stats()
+		self:on_last_player_death(player)
 	end
+end
+
+function Game:on_last_player_death(player)
+	self.menu_manager:set_can_pause(false)
+	self.music_player:set_disk("game_over")
+	self.music_player:pause()
+	self:pause_repeating_sounds()
+	self.game_state = GAME_STATE_DYING
+	self.timer_before_game_over = self.max_timer_before_game_over
+
+	self:save_stats()
 end
 
 function Game:update_timer_before_game_over(dt)
@@ -681,7 +690,7 @@ function Game:update_timer_before_game_over(dt)
 	self.timer_before_game_over = self.timer_before_game_over - dt
 	
 	if self.timer_before_game_over <= 0 then
-		self:on_game_over()
+		self:game_over()
 	end
 end
 
@@ -700,7 +709,7 @@ function Game:save_stats()
 	self.stats.max_combo = self.max_combo
 end
 
-function Game:on_game_over()
+function Game:game_over()
 	self.menu_manager:set_menu("game_over")
 end
 
@@ -757,11 +766,15 @@ function Game:join_game(input_profile_id, joystick)
 
 	Input:new_user(player_n)
 	Input:set_last_ui_user_n(player_n)
-	self:new_player(player_n)
+	local new_player = self:new_player(player_n)
 	if joystick ~= nil then
 		Input:assign_joystick(player_n, joystick)
 	end
 	Input:assign_input_profile(player_n, input_profile_id)
+
+	if new_player ~= nil then
+		Particles:smoke(new_player.mid_x, new_player.mid_y)
+	end
 
 	return player_n
 end
@@ -771,8 +784,8 @@ function Game:new_player(player_n, x, y)
 	if player_n == nil then
 		return
 	end
-	local mx = floor(self.level.door_ax)
-	x = param(x, mx + ((player_n-1) / (MAX_NUMBER_OF_PLAYERS-1)) * (self.level.door_bx - self.level.door_ax))
+	local mx = floor(self.level.door_rect.ax)
+	x = param(x, mx + ((player_n-1) / (MAX_NUMBER_OF_PLAYERS-1)) * (self.level.door_rect.bx - self.level.door_rect.ax))
 	y = param(y, CANVAS_HEIGHT - 3*16)
 
 	local player = Player:new(player_n, x, y, skins[player_n])
@@ -791,6 +804,7 @@ function Game:leave_game(player_n)
 	local player = self.players[player_n]
 	local profile_id = Input:get_input_profile_from_player_n(player.n):get_profile_id()
 	
+	Particles:smoke(player.mid_x, player.mid_y, 10)
 	self.players[player_n]:remove()
 	self.players[player_n] = nil
 	Input:remove_user(player_n)
@@ -822,12 +836,15 @@ function Game:start_game()
 	self.menu_manager:set_can_pause(true)
 	self:set_zoom(1)
 	self:set_camera_position(0, 0)
+	game.camera:reset()
+	game.camera:set_x_locked(true)
+	game.camera:set_y_locked(true)
 end
 
 function Game:on_red_button_pressed()
 	self:save_stats()
-	self.menu_manager:set_can_pause(false)
 	self.game_state = GAME_STATE_ELEVATOR_BURNING
+	self.menu_manager:set_can_pause(false)
 	self.level:on_red_button_pressed()
 end
 
@@ -855,7 +872,7 @@ end
 
 function Game:keypressed(key, scancode, isrepeat)
 	if scancode == "space" and self.debug_mode then
-		self:screenshot()
+		-- self:screenshot()
 	end
 
 	if self.menu_manager then
@@ -878,6 +895,15 @@ end
 
 function Game:joystickremoved(joystick)
 	Input:joystickremoved(joystick)
+	
+	local player_n = Input:get_joystick_user_n(joystick)
+	if player_n ~= -1 then 
+		if self.game_state == GAME_STATE_WAITING then
+			self:leave_game(player_n)
+		else
+			self.menu_manager:enable_joystick_wait_mode(joystick)
+		end
+	end
 end
 
 function Game:gamepadpressed(joystick, buttoncode)

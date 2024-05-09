@@ -100,14 +100,16 @@ function Loot:update_loot(dt)
 			self.blink_is_shown = not self.blink_is_shown
 		end
 	end
+	
+	self.spr:set_color(ternary(self.blink_is_shown, COL_WHITE, {1,1,1, 0.2}))
 
 	-- if outside bounds
-	if self.x <= 0 or self.x > CANVAS_WIDTH or self.y <= 0 or self.y > CANVAS_HEIGHT then
-		self:set_pos(CANVAS_WIDTH/2, CANVAS_HEIGHT/2)
-	end
+	-- if self.x <= 0 or self.x > CANVAS_WIDTH or self.y <= 0 or self.y > CANVAS_HEIGHT then
+	-- 	self:set_pos(CANVAS_WIDTH/2, CANVAS_HEIGHT/2)
+	-- end
 
 	if self.life < 0 then
-		Particles:smoke(self.mid_x, self.mid_y)
+		Particles:smoke(self.mid_x, self.mid_y - 8)
 		self:remove()
 	end
 end
@@ -116,11 +118,7 @@ function Loot:update(dt)
 end
 
 function Loot:draw()
-	if not self.blink_is_shown then
-		gfx.setColor(1,1,1, 0.2)
-	end
 	self:draw_actor()
-	gfx.setColor(1,1,1, 1)
 	--gfx.draw(self.spr, self.x, self.y)
 end
 
@@ -289,7 +287,7 @@ function Loot.Gun:reset()
 	self.vy = 0
 
 	self.min_attract_dist = 16
-	self.uncollectable_timer = 1.0
+	self.uncollectable_timer = 0.5
 	
 	self.friction_x = self.default_friction
 	
@@ -304,19 +302,23 @@ function Loot.Gun:on_collect(player)
 	local old_gun = player.gun
 	player:equip_gun(self.gun)
 	
-	Particles:smoke(self.mid_x, self.mid_y, nil, COL_LIGHT_BROWN)
+	Particles:smoke(self.mid_x, self.mid_y, 10, COL_LIGHT_BROWN)
 	Audio:play("item_collect")
 
 	local old_life = self.life
 	Particles:word(self.mid_x, self.mid_y, string.upper(self.gun.display_name or self.gun.name), COL_LIGHT_YELLOW)
 	self:reset()
 	
-	self.life = old_life
-	self.gun = old_gun
-	self:set_sprite(self.gun.spr)
+	local new_loot = Loot.Gun:new(self.x, self.y, self.value, 0, 0)
+	new_loot.life = old_life
+	new_loot.gun = old_gun
+	new_loot:set_image(old_gun.spr)
+	game:new_actor(new_loot)
 
-	self.uncollectable_timer = 1.0
+	-- self.uncollectable_timer = 1.0
 	-- self:remove()
+
+	self:remove()
 end
 
 function Loot.Gun:update(dt)
@@ -324,28 +326,15 @@ function Loot.Gun:update(dt)
 
 	self.t = self.t + dt
 
-	self.sprite_oy = -6 - sin(self.t * 4) * 4
-	self.rot = sin(self.t * 4 + 0.4) * 0.1
-end
+	self.spr:update_offset(nil, -6 - sin(self.t * 4) * 4)
+	self.spr:set_rotation(sin(self.t * 4 + 0.4) * 0.1)
 
-function Loot.Gun:draw(fx, fy, custom_draw)
 	if not self.blink_is_shown then
-		gfx.setColor(1,1,1, 0.2)
+		self.spr:set_color{1, 1, 1, 0.2}
 	end
-	--gfx.draw(self.spr, self.x, self.y)
-
-	if self.is_removed then   return   end
-
-	local spr_w2 = floor(self.spr:getWidth() / 2)
-	local spr_h2 = floor(self.spr:getHeight() / 2)
-
-	local x, y = self.spr_x, self.spr_y
-	if self.spr then
-	
-		gfx.draw(self.spr, x + self.sprite_ox, y + self.sprite_oy, self.rot, fx, fy, spr_w2, spr_h2)
-	end
-	
-	gfx.setColor(1,1,1, 1)
 end
+
+-- function Loot.Gun:draw(fx, fy, custom_draw)
+-- end
 
 return Loot

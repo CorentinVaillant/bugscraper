@@ -84,17 +84,17 @@ local function debug_draw_waves(self)
 
         for j, enemy in ipairs(wave.enemies) do
             local e = enemy[1]:new()
-            local spr = e.spr
+            local image = e.spr
             e:remove()
 
             local weight = enemy[2] 
 
-            love.graphics.setColor(DEBUG_IMAGE_TO_COL[spr] or ternary(j % 2 == 0, COL_WHITE, COL_RED))
+            love.graphics.setColor(DEBUG_IMAGE_TO_COL[image] or ternary(j % 2 == 0, COL_WHITE, COL_RED))
             local w = total_w * (weight/weight_sum)
             love.graphics.rectangle("fill", x, y, w, 10)
             love.graphics.setColor(COL_WHITE)
 
-            love.graphics.draw(spr, x, y, 0, 0.8, 0.8)
+            love.graphics.draw(image, x, y, 0, 0.8, 0.8)
             print_outline(COL_WHITE, COL_BLACK_BLUE, concat(weight), x, y)
             x = x + w
         end
@@ -176,6 +176,7 @@ local function generate_menus()
         { "🔚 "..Text:text("menu.pause.quit"), quit_game },
         { "" },
         { "[DEBUG] VIEW WAVES", func_set_menu('view_waves' ) },
+        { "[DEBUG] joystick_removed", func_set_menu('joystick_removed' ) },
     }, DEFAULT_MENU_BG_COLOR, PROMPTS_NORMAL, draw_elevator_progress)
     if OPERATING_SYSTEM == "Web" then
         -- Disable quitting on web
@@ -244,14 +245,14 @@ local function generate_menus()
             self.value_text = Options:get("play_music_on_pause_menu") and "✅" or "❎"
             self.is_selectable = Options:get("sound_on")
         end},
-        { "🔈 "..Text:text("menu.options.audio.background_sounds"), function(self, option)
-            Options:toggle_background_noise()
-        end,
-        function(self)
-            self.value = Options:get("disable_background_noise")
-            self.value_text = (not Options:get("disable_background_noise")) and "✅" or "❎"
-            self.is_selectable = Options:get("sound_on")
-        end},
+        -- { "🔈 "..Text:text("menu.options.audio.background_sounds"), function(self, option)
+        --     Options:toggle_background_noise()
+        -- end,
+        -- function(self)
+        --     self.value = Options:get("disable_background_noise")
+        --     self.value_text = (not Options:get("disable_background_noise")) and "✅" or "❎"
+        --     self.is_selectable = Options:get("sound_on")
+        -- end},
         {""},
 
         -- {"MUSIC: [ON/OFF]", function(self)
@@ -381,6 +382,11 @@ local function generate_menus()
             { ControlsMenuItem, -1, input_profile_id, INPUT_TYPE_KEYBOARD, "ui_select",  "👆 "..Text:text("input.prompts.ui_select")},
             { ControlsMenuItem, -1, input_profile_id, INPUT_TYPE_KEYBOARD, "ui_back",    "🔙 "..Text:text("input.prompts.ui_back")},
             { ControlsMenuItem, -1, input_profile_id, INPUT_TYPE_KEYBOARD, "pause",      "⏸ "..Text:text("input.prompts.pause") },
+            { "" },
+            { "<<< "..Text:text("menu.options.input_submenu.global").." >>>" },
+            { Text:text("menu.options.input_submenu.note_global_keyboard") },
+            { ControlsMenuItem, -1, "global", INPUT_TYPE_KEYBOARD, "jump",           "📥 "..Text:text("input.prompts.join") },
+            { ControlsMenuItem, -1, "global", INPUT_TYPE_KEYBOARD, "split_keyboard", "🗄 "..Text:text("input.prompts.split_keyboard") },
         }, DEFAULT_MENU_BG_COLOR, PROMPTS_CONTROLS)
     end
 
@@ -422,7 +428,7 @@ local function generate_menus()
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "jump",  "⏏ "..Text:text("input.prompts.jump") },
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "shoot", "🔫 "..Text:text("input.prompts.shoot") },
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "leave_game", "🔚 "..Text:text("input.prompts.leave_game") },
-            { ""},
+            { "" },
             { "<<< "..Text:text("menu.options.input_submenu.interface").." >>>" },
             { Text:text("menu.options.input_submenu.note_ui_min_button") },
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "ui_left",    "⬅ "..Text:text("input.prompts.ui_left")},
@@ -432,7 +438,11 @@ local function generate_menus()
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "ui_select",  "👆 "..Text:text("input.prompts.ui_select")},
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "ui_back",    "🔙 "..Text:text("input.prompts.ui_back")},
             { ControlsMenuItem, player_n, input_profile_id, INPUT_TYPE_CONTROLLER, "pause",      "⏸ "..Text:text("input.prompts.pause") },
-    
+            { "" },            
+            { "<<< "..Text:text("menu.options.input_submenu.global").." >>>" },
+            { Text:text("menu.options.input_submenu.note_global_controller") },
+            { ControlsMenuItem, -1, "global", INPUT_TYPE_CONTROLLER, "jump",           "📥 "..Text:text("input.prompts.join") },
+
         }, DEFAULT_MENU_BG_COLOR, PROMPTS_CONTROLS)
     end
     
@@ -505,6 +515,7 @@ local function generate_menus()
         -- { Text:text("menu.credits.asset_item", "", "", ""), func_url()}
         { Text:text("menu.credits.asset_item", "'GamepadGuesser'", "idbrii", "MIT"), func_url("https://github.com/idbrii/love-gamepadguesser/tree/main")};
         { Text:text("menu.credits.asset_item", "'bump.lua'", "kikito", "MIT"), func_url("https://github.com/kikito/bump.lua")};
+        { Text:text("menu.credits.asset_item", "'love-error-explorer'", "snowkittykira", "MIT"), func_url("https://github.com/snowkittykira/love-error-explorer")};
     }, DEFAULT_MENU_BG_COLOR, PROMPTS_NORMAL)
 
     menus.credits_sounds = Menu:new(game, {
@@ -555,6 +566,45 @@ local function generate_menus()
         table.remove(items, 8)
     end
     menus.win = Menu:new(game, items, { 0, 0, 0, 0.95 }, PROMPTS_GAME_OVER)
+
+    ------------------------------------------------------------
+
+    menus.joystick_removed = Menu:new(game, {
+        {"<<<<<<<<< "..Text:text("menu.joystick_removed.title").." >>>>>>>>>"},
+        { "" },
+        { Text:text("menu.joystick_removed.description")},
+        { "", nil, 
+        function(self)
+            local keyset = {}
+            for joystick ,_ in pairs(game.menu_manager.joystick_wait_set) do
+                local player_n = Input:get_joystick_user_n(joystick)
+                table.insert(keyset, {player_n, joystick:getName()})
+            end
+            table.sort(keyset, function(a, b) return a[1] < b[1] end)
+
+            local s = ""
+            for _, value in pairs(keyset) do
+                s = s.."🎮 "..Text:text("menu.joystick_removed.item", value[1], value[2]).."\n"
+            end
+
+            self.label_text = s
+            --..concat("\n", game.menu_manager.joystick_wait_cooldown, " (", game.menu_manager.joystick_wait_mode, ")")
+        end,
+        },
+        { "" },
+        { "" },
+        { "" },
+        { "" },
+        { "⚠ "..Text:text("menu.joystick_removed.continue"), 
+            function(self)
+                if game.menu_manager.joystick_wait_cooldown > 0 then
+                    return
+                end
+                game.menu_manager:disable_joystick_wait_mode()
+            end, 
+        },
+        { "" },
+    }, DEFAULT_MENU_BG_COLOR, PROMPTS_GAME_OVER)
 
     return menus
 end

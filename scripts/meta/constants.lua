@@ -17,11 +17,10 @@ BUGSCRAPER_VERSION = "0.4"
 
 --------------------------------------------- 
 
+-- Graphics
 CANVAS_WIDTH = 480
 CANVAS_HEIGHT = 270
 SCREENSHOT_SCALE = 4
-
---------------------------------------------- 
 
 LAYER_BACKGROUND = 1
 LAYER_SHADOW = 2
@@ -39,25 +38,35 @@ LAYER_NAMES = {
 	[6] = "LAYER_UI",
 }
 
+SPRITE_ANCHOR_START = "s"
+SPRITE_ANCHOR_CENTER = "c"
+SPRITE_ANCHOR_END = "e"
+
+SPRITE_ANCHOR_TOP_LEFT = "ss"
+SPRITE_ANCHOR_CENTER_BOTTOM = "ce"
+SPRITE_ANCHOR_CENTER_CENTER = "cc"
+
 --------------------------------------------- 
 
+-- Physics
 BLOCK_WIDTH = 16
 BW = BLOCK_WIDTH
 
+COLLISION_TYPE_SOLID = "solid"
+COLLISION_TYPE_SEMISOLID = "semisolid"
+
 --------------------------------------------- 
 
+-- Font
 FONT_CHARACTERS = 
     " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz"..
     "{|}~ ¡¢£©®°¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿŒœŸЁАБВГДЕЖЗИЙКЛМНО"..
-    "ПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяё€🔊🔉🔈🎵🎼🔳🔲📺🕐↖🛜▶⏸🔄🔘⬅➡⬆⬇⏏🔫🔚👆🔙⌨🎮🎚❤"..
-    "✅❎🐜🔗💡"
+    "ПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяё€🔊🔉🔈🎵🎼🔳🔲📺🕐↖🛜▶⏸🔄🔘⬅➡⬆⬇⏏🔫🔚📥👆🔙🗄⌨🎮🎚❤"..
+    "✅❎🐜🔗💡⚠"
 
 --------------------------------------------- 
 
-MAX_NUMBER_OF_PLAYERS = 4
-
---------------------------------------------- 
-
+-- Colors
 COL_WHITE = {1, 1, 1, 1}
 COL_BLACK = {0, 0, 0, 1}
 COL_RED = {1, 0, 0, 1}
@@ -108,9 +117,13 @@ LOGO_COLS = {COL_LIGHT_YELLOW, COL_LIGHT_BLUE, COL_LIGHT_RED}
 
 ---------------------------------------------
 
+-- Ui
 MENU_PADDING = CANVAS_WIDTH * 0.25
 
 ---------------------------------------------
+
+-- Game
+MAX_NUMBER_OF_PLAYERS = 4
 
 GAME_STATE_WAITING = "waiting"
 GAME_STATE_PLAYING = "playing"
@@ -120,17 +133,10 @@ GAME_STATE_WIN = "win"
 
 ---------------------------------------------
 
-COLLISION_TYPE_SOLID = "solid"
-COLLISION_TYPE_SEMISOLID = "semisolid"
-
----------------------------------------------
-
 MAX_ASSIGNABLE_BUTTONS = 8
 
 INPUT_TYPE_KEYBOARD = "k"
 INPUT_TYPE_CONTROLLER = "c"
---CORENTIN
-INPUT_TYPE_MIDI = "m" 
 
 BUTTON_STYLE_SWITCH = "switch"
 BUTTON_STYLE_PLAYSTATION4 = "playstation4"
@@ -161,8 +167,8 @@ RAW_INPUT_MAP_DEFAULT_EMPTY = {
     down =      {},
     jump =      {},
     shoot =     {},
-    pause =     {},
     
+    pause =     {},
     ui_select = {},
     ui_back =   {},
     ui_left =   {},
@@ -183,8 +189,8 @@ RAW_INPUT_MAP_DEFAULT_GLOBAL = {
     down =      {},
     jump =      {"k_c", "k_b", "c_a", "c_b"},
     shoot =     {},
-    pause =     {},
     
+    pause =     {},
     ui_select = {},
     ui_back =   {},
     ui_left =   {},
@@ -199,23 +205,23 @@ RAW_INPUT_MAP_DEFAULT_GLOBAL = {
 }
 
 RAW_INPUT_MAP_DEFAULT_CONTROLLER = {
-    left =      {"c_leftstickxneg", "c_dpleft"},
-    right =     {"c_leftstickxpos", "c_dpright"},
-    up =        {"c_leftstickyneg", "c_dpup"},
-    down =      {"c_leftstickypos", "c_dpdown"},
+    left =      {"c_leftxneg", "c_dpleft"},
+    right =     {"c_leftxpos", "c_dpright"},
+    up =        {"c_leftyneg", "c_dpup"},
+    down =      {"c_leftypos", "c_dpdown"},
     jump =      {"c_a", "c_b"},
-    shoot =     {"c_x", "c_y", "c_righttrigger"},
-    pause =     {"c_start"},
+    shoot =     {"c_x", "c_y", "c_triggerright"},
     
+    pause =     {"c_start"},
     ui_select = {"c_a"},
     ui_back =   {"c_b"},
-    ui_left =   {"c_leftstickxneg", "c_dpleft"},
-    ui_right =  {"c_leftstickxpos", "c_dpright"},
-    ui_up =     {"c_leftstickyneg", "c_dpup"},
-    ui_down =   {"c_leftstickypos", "c_dpdown"},
-    ui_reset_keys = {"c_lefttrigger"},
+    ui_left =   {"c_leftxneg", "c_dpleft"},
+    ui_right =  {"c_leftxpos", "c_dpright"},
+    ui_up =     {"c_leftyneg", "c_dpup"},
+    ui_down =   {"c_leftypos", "c_dpdown"},
+    ui_reset_keys = {"c_triggerleft"},
     split_keyboard = {},
-    leave_game = {"c_lefttrigger"},
+    leave_game = {"c_triggerleft"},
 
     debug = {},
 }
@@ -227,8 +233,8 @@ RAW_INPUT_MAP_DEFAULT_KEYBOARD_SOLO = {
     down =      {"k_down", "k_s"},
     jump =      {"k_c", "k_b"},
     shoot =     {"k_x", "k_v"},
-    pause =     {"k_escape", "k_p"},
     
+    pause =     {"k_escape", "k_p"},
     ui_select = {"k_c", "k_b", "k_return"},
     ui_back =   {"k_x", "k_escape", "k_backspace"},
     ui_left =   {"k_left", "k_a"},
@@ -249,8 +255,8 @@ RAW_INPUT_MAP_DEFAULT_SPLIT_KEYBOARD_P1 = {
     down =      {"k_s"},
     jump =      {"k_f"},
     shoot =     {"k_g"},
-    pause =     {"k_escape", "k_p"},
     
+    pause =     {"k_escape", "k_p"},    
     ui_select = {"k_f"},
     ui_back =   {"k_g", "k_escape"},
     ui_left =   {"k_a"},
@@ -271,8 +277,8 @@ RAW_INPUT_MAP_DEFAULT_SPLIT_KEYBOARD_P2 = {
     down =      {"k_down"},--"k_j"
     jump =      {"k_l"},
     shoot =     {"k_;"},
-    pause =     {"k_escape", "k_p"},
     
+    pause =     {"k_escape", "k_p"},
     ui_select = {"k_l", "k_return"},
     ui_back =   {"k_;", "k_backspace"},
     ui_left =   {"k_h", "k_left"},
@@ -289,18 +295,18 @@ RAW_INPUT_MAP_DEFAULT_SPLIT_KEYBOARD_P2 = {
 UI_ACTIONS = {"ui_up", "ui_down", "ui_left", "ui_right", "ui_select", "ui_back", "pause"}
 
 AXIS_TABLE = {
-    leftstickxpos =  true,
-    leftstickxneg =  true,
-    leftstickypos =  true,
-    leftstickyneg =  true,
+    leftxpos =  true,
+    leftxneg =  true,
+    leftypos =  true,
+    leftyneg =  true,
 
-    rightstickxpos = true,
-    rightstickxneg = true,
-    rightstickypos = true,
-    rightstickyneg = true,
+    rightxpos = true,
+    rightxneg = true,
+    rightypos = true,
+    rightyneg = true,
 
-    lefttrigger =    true,
-    righttrigger =   true,
+    triggerleft =    true,
+    triggerright =   true,
 }
 
 AXIS_DEADZONE = 0.3
@@ -308,20 +314,20 @@ TRIGGER_DEADZONE = 0.3
 AXIS_ANGLE_MARGIN = 3 * math.pi/8
 UI_AXIS_ANGLE_MARGIN = 2 * math.pi/8
 AXIS_TO_KEY_NAME_MAP = {
-    ["leftx+"] = "leftstickxpos",
-    ["leftx-"] = "leftstickxneg",
-    ["lefty+"] = "leftstickypos",
-    ["lefty-"] = "leftstickyneg",
+    ["leftx+"] = "leftxpos",
+    ["leftx-"] = "leftxneg",
+    ["lefty+"] = "leftypos",
+    ["lefty-"] = "leftyneg",
 
-    ["rightx+"] = "rightstickxpos",
-    ["rightx-"] = "rightstickxneg",
-    ["righty+"] = "rightstickypos",
-    ["righty-"] = "rightstickyneg",
+    ["rightx+"] = "rightxpos",
+    ["rightx-"] = "rightxneg",
+    ["righty+"] = "rightypos",
+    ["righty-"] = "rightyneg",
 
-    ["triggerleft+"] = "lefttrigger",
-    ["triggerleft-"] = "lefttrigger",
-    ["triggerright+"] = "righttrigger",
-    ["triggerright-"] = "righttrigger",
+    ["triggerleft+"] = "triggerleft",
+    ["triggerleft-"] = "triggerleft",
+    ["triggerright+"] = "triggerright",
+    ["triggerright-"] = "triggerright",
 }
 
 GLOBAL_INPUT_USER_PLAYER_N = -1
@@ -463,16 +469,16 @@ CONTROLLER_BUTTONS = {
     ["paddle3"] = true,
     ["paddle4"] = true,
     ["touchpad"] = true,
-    ["leftstickxpos"] = true,
-    ["leftstickxneg"] = true,
-    ["leftstickypos"] = true,
-    ["leftstickyneg"] = true,
-    ["rightstickxpos"] = true,
-    ["rightstickxneg"] = true,
-    ["rightstickypos"] = true,
-    ["rightstickyneg"] = true,
-    ["lefttrigger"] = true,
-    ["righttrigger"] = true,
+    ["leftxpos"] = true,
+    ["leftxneg"] = true,
+    ["leftypos"] = true,
+    ["leftyneg"] = true,
+    ["rightxpos"] = true,
+    ["rightxneg"] = true,
+    ["rightypos"] = true,
+    ["rightyneg"] = true,
+    ["triggerleft"] = true,
+    ["triggerright"] = true,
 }
 
 --------------------------------------------- 

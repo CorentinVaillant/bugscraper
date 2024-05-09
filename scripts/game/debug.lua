@@ -1,5 +1,4 @@
 require "scripts.util"
---!local midi = require("lib.midi_input_handler.libmidi_input_handler") --Corentin
 local Class = require "scripts.meta.class"
 local Loot = require "scripts.actor.loot"
 local upgrades = require "data.upgrades"
@@ -23,11 +22,6 @@ function Debug:init(game)
 
     self.notification_message = ""
     self.notification_timer = 0.0
-
-
---Corentin
-    --!midi.print_rust("loading midi lib")
-    --!midi.init_midi()
 
     local func_damage = function(n)
         return function()
@@ -67,16 +61,18 @@ function Debug:init(game)
         ["6"] = {"heal P2", func_heal(2)},
         ["7"] = {"heal P3", func_heal(3)},
         ["8"] = {"heal P4", func_heal(4)},
+
         ["q"] = {"previous floor",function()
             self.game:set_floor(self.game:get_floor() - 1)
         end},
+
         ["w"] = {"next floor", function()
             self.game:set_floor(self.game:get_floor() + 1)
         end},
-        -- ["p"] = {"test", function()
-        --     game:apply_upgrade(upgrades.UpgradeTea:new())
-        -- end},
-        ["s"] = {"test", function()
+        ["p"] = {"upgrade", function()
+            game:apply_upgrade(upgrades.UpgradeEspresso:new())
+        end},
+        ["s"] = {"spawn", function()
             local dung = enemies.SnailShelled:new(CANVAS_WIDTH/2, CANVAS_HEIGHT/2)
             game:new_actor(dung)
         end},
@@ -115,7 +111,7 @@ function Debug:init(game)
         end},
         ["l"] = {"spawn random loot", function()
             local loot, parms = random_weighted({
-                -- {Loot.Life, 3, loot_type="life", value=1},
+                {Loot.Life, 3, loot_type="life", value=1},
 		        {Loot.Gun, 3, loot_type="gun"},
             })
             if not loot then return end
@@ -227,6 +223,9 @@ function Debug:draw()
     if self.input_view then
         self:draw_input_view()
     end
+
+    local t = concat(love.timer.getFPS(), "FPS")
+    print_outline(nil, nil, t, CANVAS_WIDTH - get_text_width(t), 0)
 end
 
 function Debug:draw_input_view()
@@ -401,9 +400,7 @@ function Debug:draw_info_view()
 		concat("windowed_h: ", Options:get("windowed_height")),
 		concat("real_wave_n ", self.game.debug2),
 		concat("number_of_alive_players ", self.game:get_number_of_alive_players()),
---CORENTIN
-		concat("midi_button :", nil), --!TODO
-        
+		concat("menu_stack ", #self.game.menu_manager.menu_stack),
 		players_str,
 		users_str,
 		joystick_user_str,

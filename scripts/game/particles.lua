@@ -116,6 +116,7 @@ function TextParticle:update(dt)
 		self.spawn_delay = self.spawn_delay - dt
 		return
 	end
+
 	self.vy = self.vy * 0.9
 	self.y = self.y + self.vy
 	
@@ -150,7 +151,7 @@ function StompedEnemyParticle:init(x,y,spr)
 	self.spr_w = self.spr:getWidth()
 	self.spr_h = self.spr:getHeight()
 	self.spr_ox = self.spr_w / 2
-	self.spr_oy = self.spr_h / 2
+	self.spr_oy = self.spr_h
 
 	self.sx = 1
 	self.sy = 1
@@ -170,8 +171,8 @@ function StompedEnemyParticle:update(dt)
 	end
 end
 function StompedEnemyParticle:draw()
-	local oy = self.spr_h*.5 - self.spr_h*.5*self.sy
-	love.graphics.draw(self.spr, self.x, self.y + oy, self.r, self.sx, self.sy, self.spr_ox, self.spr_oy)
+	-- local oy = self.spr_h*.5 - self.spr_h*.5*self.sy
+	love.graphics.draw(self.spr, self.x, self.y, self.r, self.sx, self.sy, self.spr_ox, self.spr_oy)
 end
 
 ------------------------------------------------------------

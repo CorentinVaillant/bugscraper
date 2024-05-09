@@ -9,7 +9,6 @@ function BackgroundDots:init(level)
 	self.speed = 0
 	self.def_speed = 10 --TODO
 
-	self.bg_color_progress = 0
 	self.bg_color_index = 1
 	
 	self.show_bg_particles = true
@@ -32,8 +31,8 @@ function BackgroundDots:init(level)
 	}
 	self.bg_particle_colors = {
 		{COL_VERY_DARK_GRAY, COL_DARK_GRAY},
-		{COL_MID_DARK_GREEN, color(0x3e8948)},
-		{COL_LIGHT_RED, color(0xf6757a)}, --l red + light pink
+		{COL_MID_DARK_GREEN, COL_MID_GREEN},
+		{COL_LIGHT_RED, COL_PINK}, --l red + light pink
 		{COL_MID_BLUE, COL_WHITE},
 		{color(0xc0cbdc), color(0x8b9bb4)}, --gray & dgray
 		{color(0x68386c), color(0x9e2835)}, --dpurple & dred
@@ -56,18 +55,9 @@ function BackgroundDots:update(dt)
 	self:update_background(dt)
 
 	-- BG color gradient
-	if not self.level.is_on_win_screen then
-		self.bg_color_progress = self.bg_color_progress + dt*0.2
-		local i_prev = mod_plus_1(self.bg_color_index-1, #self.bg_colors)
-		if self.level.floor <= 1 then
-			i_prev = 1
-		end
-
-		local i_target = mod_plus_1(self.bg_color_index, #self.bg_colors)
-		local prog = clamp(self.bg_color_progress, 0, 1)
-		self.clear_color = lerp_color(self.bg_colors[i_prev], self.bg_colors[i_target], prog)
-		self.bg_particle_col = self.bg_particle_colors[i_target]
-	end
+	local i_target = mod_plus_1(self.bg_color_index, #self.bg_colors)
+	self.clear_color = move_toward_color(self.clear_color, self.bg_colors[i_target], 0.06*dt)
+	self.bg_particle_col = self.bg_particle_colors[i_target]
 
 	self:update_bg_particles(dt)
 end
@@ -76,12 +66,10 @@ function BackgroundDots:set_speed(val)
 	self.speed = val
 end
 
-function BackgroundDots:change_bg_color(wave_n)
-	-- if wave_n == floor((self.bg_color_index) * (#waves / 4)) then
-	local real_wave_n = max(1, self.level.floor + 1)
+function BackgroundDots:change_bg_color()
+	local wave_n = max(1, self.level.floor + 1)
 	if wave_n % 4 == 0 then
-		-- self.bg_color_index = self.bg_color_index + 1
-		self.bg_color_index = mod_plus_1( floor(real_wave_n / 4) + 1, #self.bg_colors)
+		self.bg_color_index = mod_plus_1( floor(wave_n / 4) + 1, #self.bg_colors)
 		self.bg_color_progress = 0
 	end
 end

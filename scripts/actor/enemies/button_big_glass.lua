@@ -15,9 +15,6 @@ end
 
 function ButtonBigGlass:init_button_big_glass(x, y)
     -- We can reuse this for other stuff
-    -- x,y = CANVAS_WIDTH/2, game.world_generator.box_by * BLOCK_WIDTH
-    -- y = game.door_by - 45
-    -- x = floor(x - 58/2)
     self:init_enemy(x,y, images.big_red_button_crack3, 58, 45)
     
     self.name = "button_big_glass"
@@ -67,7 +64,7 @@ end
 
 function ButtonBigGlass:on_buffered()
 	self.x = CANVAS_WIDTH/2
-	self.y = game.door_by - 45
+	self.y = game.door_rect.by - 45
 	-- self:center_self()
 end
 
@@ -91,11 +88,11 @@ function ButtonBigGlass:on_damage(n, old_life)
     
     if old_state ~= new_state then
         self.break_state = new_state
-        local spr = self.images_cracked[self.break_state] or images.big_red_button_crack3
+        local image = self.images_cracked[self.break_state] or images.big_red_button_crack3
 
-        self.spr = spr
+        self.spr:set_image(image)
         game:screenshake(self.change_break_state_screenshake)
-        Particles:image(self.mid_x, self.mid_y, self.change_break_state_num_particles, images.ptc_glass_shard, self.h)
+        Particles:image(self.mid_x, self.mid_y, self.change_break_state_num_particles, images.glass_shard, self.h)
         local pitch = max(0.1, lerp(0.5, 1, self.life/self.max_life))
         Audio:play(self.sound_fracture, nil, pitch)
     end
@@ -106,7 +103,7 @@ end
 function ButtonBigGlass:on_death()
     Audio:play(self.sound_break)
     game:screenshake(self.break_screenshake)
-    Particles:image(self.mid_x, self.mid_y, self.break_num_particles, images.ptc_glass_shard, self.h)
+    Particles:image(self.mid_x, self.mid_y, self.break_num_particles, images.glass_shard, self.h)
 
     -- local b = create_actor_centered(self.spawned_button, CANVAS_WIDTH/2, game.world_generator.box_rby)
     local b = create_actor_centered(self.spawned_button, self.mid_x, self.mid_y)

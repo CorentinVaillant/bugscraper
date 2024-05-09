@@ -112,7 +112,7 @@ function Elevator:do_reverse_elevator(dt)
 		-- fire particles
 		local q = max(0, (abs(self.elevator_speed) - 200)*0.01)
 		for i=1, q do
-			local x,y = random_range(self.cabin_ax, self.cabin_bx),random_range(self.cabin_ay, self.cabin_by)
+			local x,y = random_range(self.cabin_rect.ax, self.cabin_rect.bx),random_range(self.cabin_rect.ay, self.cabin_rect.by)
 			local size = max(4, abs(self.elevator_speed)*0.01)
 			local velvar = max(5, abs(self.elevator_speed))
 			Particles:fire(x,y,size, nil, velvar)
@@ -175,7 +175,7 @@ function Elevator:on_exploding_elevator(dt)
 
 	----smoke
 	for i=1, 200 do
-		local x,y = random_range(self.cabin_ax, self.cabin_bx), random_range(self.cabin_ay, self.cabin_by)
+		local x,y = random_range(self.cabin_rect.ax, self.cabin_rect.bx), random_range(self.cabin_rect.ay, self.cabin_rect.by)
 		Particles:splash(x,y, 5, nil, nil, 10, 4)
 	end
 
@@ -291,21 +291,21 @@ end
 
 
 RAW_INPUT_MAP_DEFAULT_SOLO = {
-    left =      {"k_left", "k_a",                   "c_leftstickxneg", "c_rightstickxneg", "c_dpleft"},
-    right =     {"k_right", "k_d",                  "c_leftstickxpos", "c_rightstickxpos", "c_dpright"},
-    up =        {"k_up", "k_w",                     "c_leftstickyneg", "c_rightstickyneg", "c_dpup"},
-    down =      {"k_down", "k_s",                   "c_leftstickypos", "c_rightstickypos", "c_dpdown"},
+    left =      {"k_left", "k_a",                   "c_leftxneg", "c_rightxneg", "c_dpleft"},
+    right =     {"k_right", "k_d",                  "c_leftxpos", "c_rightxpos", "c_dpright"},
+    up =        {"k_up", "k_w",                     "c_leftyneg", "c_rightyneg", "c_dpup"},
+    down =      {"k_down", "k_s",                   "c_leftypos", "c_rightypos", "c_dpdown"},
     jump =      {"k_c", "k_b",                      "c_a", "c_b"},
-    shoot =     {"k_x", "k_v",                      "c_x", "c_y", "c_righttrigger"},
+    shoot =     {"k_x", "k_v",                      "c_x", "c_y", "c_triggerright"},
     pause =     {"k_escape", "k_p",                 "c_start"},
     
     ui_select = {"k_c", "k_b", "k_return",          "c_a"},
     ui_back =   {"k_x", "k_escape", "k_backspace",  "c_b"},
-    ui_left =   {"k_left", "k_a",                   "c_leftstickxneg", "c_rightstickxneg", "c_dpleft"},
-    ui_right =  {"k_right", "k_d",                  "c_leftstickxpos", "c_rightstickxpos", "c_dpright"},
-    ui_up =     {"k_up", "k_w",                     "c_leftstickyneg", "c_rightstickyneg", "c_dpup"},
-    ui_down =   {"k_down", "k_s",                   "c_leftstickypos", "c_rightstickypos", "c_dpdown"},
-    ui_reset_keys = {"k_tab", "c_lefttrigger"},
+    ui_left =   {"k_left", "k_a",                   "c_leftxneg", "c_rightxneg", "c_dpleft"},
+    ui_right =  {"k_right", "k_d",                  "c_leftxpos", "c_rightxpos", "c_dpright"},
+    ui_up =     {"k_up", "k_w",                     "c_leftyneg", "c_rightyneg", "c_dpup"},
+    ui_down =   {"k_down", "k_s",                   "c_leftypos", "c_rightypos", "c_dpdown"},
+    ui_reset_keys = {"k_tab", "c_triggerleft"},
     debug_1 = {"k_1"},
     debug_2 = {"k_2"},
     debug_3 = {"k_3"},
