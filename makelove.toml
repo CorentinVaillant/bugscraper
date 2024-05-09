@@ -2,6 +2,7 @@ name = "bugscraper"
 default_targets =["appimage" ]#["win64", "appimage","macos,"]
 build_directory = "export"
 icon_file = "icon.png"
+keep_game_directory = true
 
 love_files = [
     "+*",
@@ -14,6 +15,11 @@ love_files = [
     "-./lib/midi_input_handler/Cargo.lock",
     "-./lib/midi_input_handler/Cargo.toml",
     "-./lib/midi_input_handler/makefile",
+
+#other files
+    "-./makefile",
+    "-./makelove_example.toml",
+    "-./scripts/_trash.lua",
 ]
 
 [hooks]
@@ -21,14 +27,18 @@ prebuild = [
 	"make all_release",
 ]
 
+[archive_files]
+"lib.midi_input_handler.libmidi_input_handler" = "lib.midi_input_handler.libmidi_input_handler"
+
 [windows]
 [win32]
 shared_libraries = [
-	"lib/midi_input_handler/libmidi_input_handler.dll",
+	"./lib/midi_input_handler/libmidi_input_handler.dll",
 ]
 
 [appimage]
 
 shared_libraries = [
-	"lib/midi_input_handler/libmidi_input_handler.so",
+	"./lib/midi_input_handler/libmidi_input_handler.so",
 ]
+
