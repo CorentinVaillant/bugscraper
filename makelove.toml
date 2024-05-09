@@ -1,5 +1,5 @@
 name = "bugscraper"
-default_targets = ["win64", "appimage"]
+default_targets =["appimage" ]#["win64", "appimage","macos,"]
 build_directory = "export"
 icon_file = "icon.png"
 
@@ -7,6 +7,13 @@ love_files = [
     "+*",
     "-*/.*",
     "-./export/*",
+
+#midi input source code
+    "-./lib/midi_input_handler/src/*",
+    "-./lib/midi_input_handler/target/*",
+    "-./lib/midi_input_handler/Cargo.lock",
+    "-./lib/midi_input_handler/Cargo.toml",
+    "-./lib/midi_input_handler/makefile",
 ]
 
 [hooks]
