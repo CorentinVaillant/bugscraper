@@ -2,7 +2,7 @@ name = "bugscraper"
 default_targets =["appimage" ]#["win64", "appimage","macos,"]
 build_directory = "export"
 icon_file = "icon.png"
-keep_game_directory = true
+keep_game_directory = false
 
 love_files = [
     "+*",
@@ -28,15 +28,21 @@ prebuild = [
 ]
 
 [archive_files]
-"lib.midi_input_handler.libmidi_input_handler" = "lib.midi_input_handler.libmidi_input_handler"
+"lib.midi_input_handler.libmidi_input_handler.so" = "libmidi_input_handler.so"
 
 [windows]
+[windows.archive_files]
 [win32]
 shared_libraries = [
 	"./lib/midi_input_handler/libmidi_input_handler.dll",
 ]
 
 [appimage]
+[appimage.hooks]
+prebuild = [
+    "echo --------------------------------------------------------------------------------------------------------------------------------"
+]
+artifacts = "appimage" 
 
 shared_libraries = [
 	"./lib/midi_input_handler/libmidi_input_handler.so",

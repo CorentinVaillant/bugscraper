@@ -9,7 +9,14 @@
 require "scripts.util"
 
 
-local midi = require("lib.midi_input_handler.libmidi_input_handler")
+if pcall(require,"libmidi_input_handler") then
+    print("compile mode !")
+    midi = require("libmidi_input_handler")
+else
+    print("interpreted mode !")
+    midi = require("lib.midi_input_handler.libmidi_input_handler")
+end
+
     
 
 local Class = require "scripts.meta.class"
