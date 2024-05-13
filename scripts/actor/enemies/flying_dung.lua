@@ -33,11 +33,6 @@ function FlyingDung:init_flying_dung(x, y, spawner)
     self.is_stompable = true
     self.is_killed_on_stomp = false
     self.kill_when_negative_life = false
-<<<<<<< HEAD
-=======
-
-    Particles:smoke(self.mid_x, self.mid_y)
->>>>>>> main
 end
 
 function FlyingDung:update(dt)
@@ -50,14 +45,6 @@ function FlyingDung:update(dt)
     if self.state == "targeting" then
         Particles:smoke(self.mid_x, self.mid_y, 3)
         self:target_spawner()
-<<<<<<< HEAD
-=======
-        
-        local d = dist(self.mid_x, self.mid_y, self.spawner.mid_x, self.spawner.mid_y)
-        if d <= 16 then
-            self:hit_target(self.spawner)
-        end
->>>>>>> main
     end
 end
 
@@ -78,7 +65,6 @@ end
 function FlyingDung:begin_targeting()
     self.state = "targeting"
     self.is_ponging = false
-    Audio:play_var("flying_dung_death", 0, 1.2)
 
     if self.spawner then
         self:target_spawner()
@@ -88,13 +74,6 @@ function FlyingDung:begin_targeting()
 end
 
 function FlyingDung:target_spawner()
-<<<<<<< HEAD
-=======
-    if not self.spawner then
-        return
-    end
-    
->>>>>>> main
     local a = atan2(self.spawner.mid_y - self.mid_y, self.spawner.mid_x - self.mid_x)
     self.pong_vx = 0
     self.pong_vy = 0
@@ -115,19 +94,13 @@ function FlyingDung:after_collision(col, other)
     end
     if col.other == self.spawner and not self.invul and self.state == "targeting" then
         if col.other.name == "dung_beetle" then
-            self:hit_target(col.other)
+            col.other:on_hit_flying_dung(self)
         end
+        game:screenshake(6)
+    	game:frameskip(8)
+
+        self:kill()
     end 
-end
-
-function FlyingDung:hit_target(target)
-    if target.name == "dung_beetle" then
-        target:on_hit_flying_dung(self)
-    end
-    game:screenshake(6)
-    game:frameskip(8)
-
-    self:kill()
 end
 
 function FlyingDung:on_death()

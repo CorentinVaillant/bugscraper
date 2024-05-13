@@ -53,14 +53,7 @@ end
 
 function Menu:draw()
 	for i, item in pairs(self.items) do
-		if not item.is_selected then
-			item:draw()
-		end
-	end
-	for i, item in pairs(self.items) do
-		if item.is_selected then
-			item:draw()
-		end
+		item:draw()
 	end
 	self:draw_prompts()
 	if self.extra_draw then self.extra_draw() end
@@ -91,19 +84,7 @@ function Menu:draw_prompts()
 
 		if #prompt >= 2 then
 			local actions, text = prompt[1], prompt[2]
-			local user_n = Input:get_last_ui_user_n() -- scotch
-			if Input:get_user(user_n) == nil then
-				local function find_first_valid_player()
-					for i = 1, MAX_NUMBER_OF_PLAYERS do
-						if Input:get_user(i) then
-							return i
-						end
-					end
-					return -1
-				end
-				user_n = find_first_valid_player()
-			end
-			local new_x = Input:draw_input_prompt(user_n, actions, text, COL_LIGHTEST_GRAY, x, y)
+			local new_x = Input:draw_input_prompt(Input:get_last_ui_user_n(), actions, text, COL_LIGHTEST_GRAY, x, y)
 			x = new_x + 4
 		end
 	end

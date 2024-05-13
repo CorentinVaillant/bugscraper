@@ -1,7 +1,6 @@
 require "scripts.util"
 local Class = require "scripts.meta.class"
 local ElevatorDoor = require "scripts.level.elevator_door"
-local Timer = require "scripts.timer"
 
 local images = require "data.images"
 local sounds = require "data.sounds"
@@ -17,34 +16,23 @@ function Elevator:init(level)
 	self.floor_progress = 0.0
 	self.door_animation = false
 	self.has_switched_to_next_floor = false 
-
-	self.door_animation_timer = Timer:new(1.0)
+	self.draw_enemies_in_bg = false
 
 	self.clock_ang = pi
 end
 
 function Elevator:update(dt)
 	self:update_door_animation(dt)
-	
-	if self.door_animation_timer:update(dt) then
-		self:close_door()
-	end
 end
 
-function Elevator:open_door(close_timer)
+function Elevator:open_door(dt)
 	self.door:open()
 	sounds.elev_door_open.source:play()
-	if close_timer then
-		self.door_animation_timer:set_duration(close_timer)
-		self.door_animation_timer:start()
-	end
 end
 
-function Elevator:close_door()
+function Elevator:close_door(dt)
 	self.door:close()
 	sounds.elev_door_close.source:play()
-	self.door_animation_timer:stop()
-	self.level:on_door_close()
 end
 
 function Elevator:update_door_animation(dt)
@@ -58,11 +46,7 @@ end
 
 ---------------------------------------------
 
-<<<<<<< HEAD
 function Elevator:draw(enemy_buffer)
-=======
-function Elevator:draw(enemy_buffer, wave_progress)
->>>>>>> main
 	local x, y = self.level.door_rect.ax, self.level.door_rect.ay
 	local w, h = self.level.door_rect.bx - self.level.door_rect.ax+1, self.level.door_rect.by - self.level.door_rect.ay+1
 	rect_color(self.level.background.clear_color, "fill", x, y, w, h);

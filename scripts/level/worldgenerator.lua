@@ -9,19 +9,6 @@ function WorldGenerator:init(map)
 
 	self.screen_w = math.ceil(CANVAS_WIDTH / BW)
 	self.screen_h = math.ceil(CANVAS_HEIGHT / BW)
-
-	self.end_rubble_slices = {
-		Rect:new(0, 16, 29, 16),
-		Rect:new(5, 15, 25, 15),
-		Rect:new(7, 14, 23, 14),
-		Rect:new(10, 13, 22, 13),
-		Rect:new(16, 12, 17, 12),
-	}
-
-	-- 16, 17
-	-- 10, 22
-	-- 7, 23
-	-- 5, 25
 end
 
 function WorldGenerator:reset()
@@ -62,33 +49,6 @@ function WorldGenerator:generate_cafeteria()
 	self:write_rect(Rect:new(27, 13, 40, 13), 3)
 end
 
-<<<<<<< HEAD
-function WorldGenerator:write_rect(rect, value)
-	-- Floor/Ceiling
-	for ix=rect.ax, rect.bx do
-		self.map:set_tile(ix, rect.ay, value)
-		self.map:set_tile(ix, rect.by, value)
-	end
-	-- Left/Right walls
-	for iy=rect.ay, rect.by do
-		self.map:set_tile(rect.ax, iy, value)
-		self.map:set_tile(rect.bx, iy, value)
-=======
-function WorldGenerator:generate_end_rubble()
-	self:reset()
-
-	-- Bounds
-	-- self:write_rect(Rect:new(0, 0, 29, 0), 1)
-	
-	-- map collision
-	local slices = self.end_rubble_slices
-	for i = 1, #slices do
-		local tile = ternary(i==1, 1, 2)
-		self:write_rect(slices[i], tile)
->>>>>>> main
-	end
-end
-
 function WorldGenerator:write_rect(rect, value)
 	-- Floor/Ceiling
 	for ix=rect.ax, rect.bx do
@@ -101,7 +61,6 @@ function WorldGenerator:write_rect(rect, value)
 		self.map:set_tile(rect.bx, iy, value)
 	end
 end
-
 
 function WorldGenerator:write_rect_fill(ax, ay, bx, by, value)
 	for ix=ax, bx do

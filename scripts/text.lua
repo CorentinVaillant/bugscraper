@@ -54,12 +54,12 @@ function TextManager:text(code, ...)
     -- assert(v ~= nil, "Text value for key '"..tostring(code).."' doesn't exist") 
     if v == nil then
         -- print_debug("/!\\ TextManager:text - value for key '"..tostring(code).."' doesn't exist)");
-        return code
+        return code, false
     end
     if #({...}) > 0 then
         return string.format(v, ...)
     end
-    return v
+    return v, true
 end
 
 function TextManager:text_fallback(code, fallback, ...)

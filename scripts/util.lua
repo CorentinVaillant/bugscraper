@@ -20,49 +20,6 @@ pi = math.pi
 pi2 = 2*math.pi
 inf = math.huge
 
--- scotch 
-local old_print = love.graphics.print
-function love.graphics.print(text, x, y, ...)
-	return old_print(text, math.floor(x), math.floor(y))
-end
-
--- huge scotch for love.js compatibility
--- https://github.com/Davidobot/love.js/issues/92
-local old_newCanvas = love.graphics.newCanvas
-function love.graphics.newCanvas(width, height, settings)
-	settings = settings or {}
-
-    if not settings.format then
-        -- Fallback chain for supported image formats
-        local supportedCanvasFormats = love.graphics.getCanvasFormats()
-        local fallbackChain = {
-            -- It's possible to include other formats if necessary, as long as they have 4 components: 
-            -- https://love2d.org/wiki/PixelFormat
-            -- I don't know much about the specifics of these formats, please adapt to what works best for you.  
-            -- Note that this does not take into account if `t.gammacorrect = true` is set in `love.conf`, please implement it yourself if needed.
-            "rgba8",
-            "srgba8",
-            "rgb10a2",
-            "rgb5a1",
-            "rgba4",
-            "normal"
-        }
-        local format = fallbackChain[1]
-        local i = 1
-        while i <= #fallbackChain and not supportedCanvasFormats[format] do
-            i = i + 1
-            format = fallbackChain[i]
-        end
-        if i == #fallbackChain + 1 then
-            error("No valid canvas format is supported by the system")
-        end
-
-        settings.format = format
-    end
-
-	return old_newCanvas(width, height, settings)
-end
-
 function param(value, def_value)
 	if value == nil then
 		return def_value
@@ -837,9 +794,7 @@ end
 function cerp(a,b,t)
 	-- "constant" interpolation?
 	-- 2024 leo here: wtf is this shit
-	if math.abs(a-b) <= t then
-		return b
-	end
+	if abs(a-b) <= t then    return b    end
 	return a + sign0(b-a)*t
 end
 
@@ -856,42 +811,9 @@ end
 function move_toward(from, to, delta)
     if math.abs(to - from) <= delta then
         return to
+    else
+        return from + sign(to - from) * delta
     end
-	return from + sign(to - from) * delta
-end
-
-function move_toward_color(a, b, t)
-	local c = {
-		move_toward(a[1], b[1], t),
-		move_toward(a[2], b[2], t),
-		move_toward(a[3], b[3], t),
-		move_toward(a[4] or 1, b[4] or 1, t),
-	}
-	return c
-end
-
-function move_toward_color_radial(a, b, t)
-	a[4] = a[4] or 1
-	b[4] = b[4] or 1
-	local a_hsv = rgb_to_hsv(unpack(a))
-	local b_hsv = rgb_to_hsv(unpack(b))
-	return hsv_to_rgb(
-		move_toward_angle(a_hsv[1]*pi2, b_hsv[1]*pi2, t) / pi2,
-		move_toward(a_hsv[2], b_hsv[2], t),
-		move_toward(a_hsv[3], b_hsv[3], t),
-		move_toward(a_hsv[4], b_hsv[4], t)
-	)
-end
-
-function move_toward_angle(a, b, t)
-	local epsilon = 0.01
-	a = a % (math.pi*2)
-	b = b % (math.pi*2)
-	if math.abs(b - a) <= t then
-		return b
-	else
-		return a + sign0(shortest_angle_dist(a, b))*t
-	end
 end
 
 function lerp(a,b,t)
@@ -907,90 +829,6 @@ function lerp_color(a,b,t)
 	}
 	return c
 end
-
-function lerp_color_radial(a,b,t)
-	a[4] = a[4] or 1
-	b[4] = b[4] or 1
-	local a_hsv = rgb_to_hsv(unpack(a))
-	local b_hsv = rgb_to_hsv(unpack(b))
-	return hsv_to_rgb(
-		lerp_angle(a_hsv[1]*pi2, b_hsv[1]*pi2, t)/pi2,
-		lerp      (a_hsv[2], b_hsv[2], t),
-		lerp      (a_hsv[3], b_hsv[3], t),
-		lerp      (a_hsv[4], b_hsv[4], t)
-	)
-end
-
--- http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
---[[
-   * Converts an RGB color value to HSV. Conversion formula
-   * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
-   * Assumes r, g, and b are contained in the set [0, 1] and
-   * returns h, s, and v in the set [0, 1].
-   *
-   * @param   Number  r       The red color value
-   * @param   Number  g       The green color value
-   * @param   Number  b       The blue color value
-   * @return  Array           The HSV representation
-]]
-function rgb_to_hsv(r, g, b, a)
-    local max_, min_ = math.max(r, g, b), math.min(r, g, b)
-    local h, s, v
-    v = max_
-  
-    local d = max_ - min_
-    if max_ == 0 then s = 0 else s = d / max_ end
-  
-    if max_ == min_ then
-		h = 0 -- achromatic
-    else
-		if max_ == r then
-		h = (g - b) / d
-		if g < b then h = h + 6 end
-		elseif max_ == g then h = (b - r) / d + 2
-		elseif max_ == b then h = (r - g) / d + 4
-		end
-		h = h / 6
-    end
-  
-    return {h, s, v, a}
-end
-  
--- http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
---[[
-   * Converts an HSV color value to RGB. Conversion formula
-   * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
-   * Assumes h, s, and v are contained in the set [0, 1] and
-   * returns r, g, and b in the set [0, 1].
-   *
-   * @param   Number  h       The hue
-   * @param   Number  s       The saturation
-   * @param   Number  v       The value
-   * @return  Array           The RGB representation
-]]
-function hsv_to_rgb(h, s, v, a)
-	local r, g, b
-
-	local i = math.floor(h * 6);
-	local f = h * 6 - i;
-	local p = v * (1 - s);
-	local q = v * (1 - f * s);
-	local t = v * (1 - (1 - f) * s);
-
-	i = i % 6
-
-	if i == 0 then r, g, b = v, t, p
-	elseif i == 1 then r, g, b = q, v, p
-	elseif i == 2 then r, g, b = p, v, t
-	elseif i == 3 then r, g, b = p, q, v
-	elseif i == 4 then r, g, b = t, p, v
-	elseif i == 5 then r, g, b = v, p, q
-	end
-
-	return {r, g, b, a}
-end
-
-
 
 function wrap_to_pi(a)
 	return (a + math.pi) % (math.pi*2) - math.pi
@@ -1092,20 +930,6 @@ function get_orthogonal(x, y, dir)
 	end
 end
 
--- https://easings.net/#easeOutBack
--- https://www.lexaloffle.com/bbs/?tid=40577
-
 function ease_out_cubic(x)
 	return 1 - math.pow(1 - x, 3)
-end
-
-function ease_out_back(x)
-	local c1 = 1.70158;
-	local c3 = c1 + 1;
-	
-	return 1 + c3 * math.pow(x - 1, 3) + c1 * math.pow(x - 1, 2)
-end
-
-function ease_out_elastic(x)
-	return 1 - (2^(-10*x))*math.cos(2*x)
 end

@@ -8,9 +8,6 @@ local images = require "data.images"
 
 local Debug = Class:inherit()
 
-local col_a = {random_range(0, 1), random_range(0, 1), random_range(0, 1), 1}
-local col_b = {random_range(0, 1), random_range(0, 1), random_range(0, 1), 1}
-
 function Debug:init(game)
     self.game = game
 
@@ -19,9 +16,6 @@ function Debug:init(game)
     self.colview_mode = false
     self.info_view = false
     self.joystick_view = false
-    self.bound_view = false
-    self.view_fps = true
-    
     self.instant_end = false
     self.layer_view = false
     self.input_view = false
@@ -59,12 +53,6 @@ function Debug:init(game)
         ["f5"] = {"view input info", function()
             self.input_view = not self.input_view
         end},
-        -- ["f6"] = {"toggle FPS", function()
-        --     self.view_fps = not self.view_fps
-        -- end},
-        ["f6"] = {"toggle controller state", function()
-            self.view_fps = not self.view_fps
-        end},
         ["1"] = {"damage P1", func_damage(1)},
         ["2"] = {"damage P2", func_damage(2)},
         ["3"] = {"damage P3", func_damage(3)},
@@ -84,35 +72,9 @@ function Debug:init(game)
         ["p"] = {"upgrade", function()
             game:apply_upgrade(upgrades.UpgradeEspresso:new())
         end},
-<<<<<<< HEAD
-=======
-        ["t"] = {"particle", function()
-            Particles:image(CANVAS_WIDTH/2, CANVAS_HEIGHT/2 + 50, 1, {
-                images.bullet_vanish_1,
-                images.bullet_vanish_2,
-                images.bullet_vanish_3,
-                images.bullet_vanish_4,
-                images.bullet_vanish_5,
-            }, 0, nil, 0, 0, {
-                is_solid = false,
-                rot = 0,
-                vx1 = 0,
-                vx2 = 0,
-                vy1 = 0,
-                vy2 = 0,
-                vr1 = 0,
-                vr2 = 0,
-                life = 0.15,
-                is_animated = true
-            })
-        end},
->>>>>>> main
         ["s"] = {"spawn", function()
             local dung = enemies.SnailShelled:new(CANVAS_WIDTH/2, CANVAS_HEIGHT/2)
             game:new_actor(dung)
-        end},
-        ["r"] = {"start game", function()
-            game:start_game()
         end},
         
         ["e"] = {"kill all enemies", function()
@@ -131,9 +93,10 @@ function Debug:init(game)
             self.layer_view = not self.layer_view
         end},
         
-        ["c"] = {"color lerp test", function()
-            col_a = {random_range(0, 1), random_range(0, 1), random_range(0, 1), 1}
-            col_b = {random_range(0, 1), random_range(0, 1), random_range(0, 1), 1}
+        ["c"] = {"set cam target", function()
+            game.camera:set_x_locked(true)
+            game.camera:set_y_locked(true)
+            game.camera:set_target_position(0, 100)
         end},
         
         ["b"] = {"toggle cabin view", function()
@@ -198,7 +161,6 @@ function Debug:init(game)
 end
 
 function Debug:update(dt)
-    if not game.debug_mode then return end
 end
 
 function Debug:debug_action(key, scancode, isrepeat)
@@ -218,7 +180,6 @@ end
 
 function Debug:keypressed(key, scancode, isrepeat)
     if isrepeat then return end
-    if not game.debug_mode then return end
 
     if scancode == "f1"then
         self.is_reading_for_f1_action = true
@@ -263,15 +224,8 @@ function Debug:draw()
         self:draw_input_view()
     end
 
-<<<<<<< HEAD
     local t = concat(love.timer.getFPS(), "FPS")
     print_outline(nil, nil, t, CANVAS_WIDTH - get_text_width(t), 0)
-=======
-    if true or self.view_fps then
-        local t = concat(love.timer.getFPS(), "FPS")
-        print_outline(nil, nil, t, CANVAS_WIDTH - get_text_width(t), 0)
-    end
->>>>>>> main
 end
 
 function Debug:draw_input_view()
@@ -315,29 +269,26 @@ function Debug:draw_joystick_view()
     local spacing = 70
     local i = 0
     for _, joy in pairs(love.joystick.getJoysticks()) do
-        self:draw_joystick_view_for(joy, i*spacing, -20, "leftx", "lefty", true)
+        self:draw_joystick_view_for(joy, i*spacing, 20, 1, 2)
         i = i + 1
-        self:draw_joystick_view_for(joy, i*spacing, -20, "rightx", "righty")
+        self:draw_joystick_view_for(joy, i*spacing, 20, 3, 4)
         i = i + 1
     end
 end
 
-function Debug:draw_joystick_view_for(joystick, x, y, axis_x, axis_y, is_first)
+function Debug:draw_joystick_view_for(joystick, x, y, axis_x, axis_y)
     local user_n = Input:get_joystick_user_n(joystick)
-    local name = concat(utf8.sub(joystick:getName(), 1, 10), "...", utf8.sub(joystick:getName(), -10, -1))
-    
-    if is_first then
-        print_outline(COL_WHITE, COL_BLACK_BLUE, name, x+30, y+20)
-        print_outline(COL_WHITE, COL_BLACK_BLUE, concat("(Ply '", user_n, "')"), x+30, y+30)
-    end
+    local name = concat(utf8.sub(joystick:getName(), 1, 4), "...", utf8.sub(joystick:getName(), -4, -1))
+	print_outline(COL_WHITE, COL_BLACK_BLUE, name, x+30, y+20)
+	print_outline(COL_WHITE, COL_BLACK_BLUE, concat("(P", user_n, ")"), x+30, y+30)
 
-	-- print_outline(ternary(Input:action_down(user_n, "left"), COL_GREEN, COL_WHITE),  COL_BLACK_BLUE, ternary(Input:action_down_any_player("left"), "✅", "❎"), x+30, y+60)
-	-- print_outline(ternary(Input:action_down(user_n, "right"), COL_GREEN, COL_WHITE), COL_BLACK_BLUE, ternary(Input:action_down_any_player("right"), "✅", "❎"), x+70, y+60)
-	-- print_outline(ternary(Input:action_down(user_n, "up"), COL_GREEN, COL_WHITE),    COL_BLACK_BLUE, ternary(Input:action_down_any_player("up"), "✅", "❎"), x+50, y+40)
-	-- print_outline(ternary(Input:action_down(user_n, "down"), COL_GREEN, COL_WHITE),  COL_BLACK_BLUE, ternary(Input:action_down_any_player("down"), "✅", "❎"), x+50, y+80)
+	print_outline(ternary(Input:action_down(user_n, "left"), COL_GREEN, COL_WHITE),  COL_BLACK_BLUE, ternary(Input:action_down_any_player("left"), "✅", "❎"), x+30, y+60)
+	print_outline(ternary(Input:action_down(user_n, "right"), COL_GREEN, COL_WHITE), COL_BLACK_BLUE, ternary(Input:action_down_any_player("right"), "✅", "❎"), x+70, y+60)
+	print_outline(ternary(Input:action_down(user_n, "up"), COL_GREEN, COL_WHITE),    COL_BLACK_BLUE, ternary(Input:action_down_any_player("up"), "✅", "❎"), x+50, y+40)
+	print_outline(ternary(Input:action_down(user_n, "down"), COL_GREEN, COL_WHITE),  COL_BLACK_BLUE, ternary(Input:action_down_any_player("down"), "✅", "❎"), x+50, y+80)
 	
 	local ox = x+60
-	local oy = y+80
+	local oy = y+140
 	local r = 30
 	love.graphics.setColor(COL_GREEN)
     circle_color({0,0,0,0.5}, "fill", ox, oy, r)
@@ -351,74 +302,36 @@ function Debug:draw_joystick_view_for(joystick, x, y, axis_x, axis_y, is_first)
 	-- love.graphics.line(x-r, y-AXIS_DEADZONE*r, x+r, y-AXIS_DEADZONE*r)
 	-- love.graphics.line(x-r, y+AXIS_DEADZONE*r, x+r, y+AXIS_DEADZONE*r)
 	-- love.graphics.setColor(COL_WHITE)
-    local deadzone = Options:get("axis_deadzone_p"..tostring(user_n)) or AXIS_DEADZONE
-
 	love.graphics.setColor(COL_GREEN)
-	love.graphics.circle("line", ox, oy, r*deadzone)
+	love.graphics.circle("line", ox, oy, r*AXIS_DEADZONE)
 	for a = pi/8, pi2, pi/4 do
 		local ax = math.cos(a)
 		local ay = math.sin(a)
-		love.graphics.line(ox + deadzone*ax*r, oy + deadzone*ay*r, ox + r*ax, oy + r*ay)
+		love.graphics.line(ox + AXIS_DEADZONE*ax*r, oy + AXIS_DEADZONE*ay*r, ox + r*ax, oy + r*ay)
 	end
 	love.graphics.setColor(COL_WHITE)
 	
 	local function get_axis_angle(j, ax, ay) 
-		return math.atan2(j:getGamepadAxis(ay), j:getGamepadAxis(ax))
+		return math.atan2(j:getAxis(ay), j:getAxis(ax))
 	end
 	local function get_axis_radius_sqr(j, ax, ay) 
-		return distsqr(j:getGamepadAxis(ax), j:getGamepadAxis(ay))
+		return distsqr(j:getAxis(ax), j:getAxis(ay))
 	end
 	
-	local u = Input:get_user(user_n)
-    local j = joystick
+	local u = Input:get_user(1)
 	if u ~= nil then
-		circle_color(COL_RED, "fill", ox + r*j:getGamepadAxis(axis_x), oy + r*j:getGamepadAxis(axis_y), 2)
+		local j = joystick
+		circle_color(COL_RED, "fill", ox + r*j:getAxis(axis_x), oy + r*j:getAxis(axis_y), 1)
 	
-        local val_x = round(j:getGamepadAxis(axis_x), 3)
-        local val_y = round(j:getGamepadAxis(axis_y), 3)
-        local val_a = round(get_axis_angle(j, axis_x, axis_y), 3)
-        local val_r = round(math.sqrt(get_axis_radius_sqr(j, axis_x, axis_y)), 3)
+        local val_x = round(j:getAxis(axis_x), 3)
+        local val_y = round(j:getAxis(axis_y), 3)
+        local val_a = round(get_axis_angle(j, 1, 2), 3)
+        local val_r = round(math.sqrt(get_axis_radius_sqr(j, 1, 2)), 3)
 		print_outline(COL_WHITE, COL_BLACK_BLUE, "x "..tostring(val_x), ox - 20, oy + 40)
 		print_outline(COL_WHITE, COL_BLACK_BLUE, "y "..tostring(val_y), ox - 20, oy + 50)
 		print_outline(COL_WHITE, COL_BLACK_BLUE, "a "..tostring(val_a), ox - 20, oy + 60)
 		print_outline(COL_WHITE, COL_BLACK_BLUE, "r "..tostring(val_r), ox - 20, oy + 70)
 	end
-
-    if is_first then 
-        local zl = j:getGamepadAxis("triggerleft")
-        local zr = j:getGamepadAxis("triggerright")
-        print_outline(COL_WHITE, COL_BLACK_BLUE, concat("ZL ", zl), ox - 20, oy + 80)
-        print_outline(COL_WHITE, COL_BLACK_BLUE, concat("ZR ", zr), ox - 20, oy + 90)
-    end
-    
-    local keys = ternary(is_first, {
-        "a",
-        "b",
-        "x",
-        "y",
-        "back",
-        "start",
-        "leftstick",
-        "rightstick",
-    },
-    {
-        "leftshoulder",
-        "rightshoulder",
-        "dpup",
-        "dpdown",
-        "dpleft",
-        "dpright",
-        -- "misc1",
-        -- "paddle1",
-        -- "paddle2",
-        -- "paddle3",
-        -- "paddle4",
-        -- "touchpad",
-    })
-    for i, key in ipairs(keys) do
-        local txt = concat(key, " ", ternary(j:isGamepadDown(key), "✅", "❎"))
-        print_outline(COL_WHITE, COL_BLACK_BLUE, txt, ox - 20, oy + 90 + 10*i)
-    end
 end
 
 function Debug:draw_debug_menu()
@@ -477,12 +390,11 @@ function Debug:draw_info_view()
 		concat("FPS: ",love.timer.getFPS(), " / frmRpeat: ",self.game.frame_repeat, " / frame: ",frame),
 		concat("LÖVE version: ", string.format("%d.%d.%d - %s", love.getVersion())),
 		concat("game state: ", game.game_state),
-		concat("level.level_speed: ", game.level.level_speed),
 		concat("cam pos:  ", concatsep({game.camera:get_position()})),
 		concat("cam tpos: ", concatsep({game.camera:get_target_position()})),
 		concat("n° of active audio sources: ", love.audio.getActiveSourceCount()),
 		concat("n° of actors: ", #self.game.actors, " / ", self.game.actor_limit),
-		concat("n° of enemies: ", self.game:get_enemy_count()),
+		concat("n° of enemies: ", self.game.enemy_count),
 		concat("n° collision items: ", Collision.world:countItems()),
 		concat("windowed_w: ", Options:get("windowed_width")),
 		concat("windowed_h: ", Options:get("windowed_height")),
@@ -505,20 +417,6 @@ function Debug:draw_info_view()
 
 	self.game.level.world_generator:draw()
 	draw_log()
-    
-    local w = 255
-    -- local col_a = color(0x0c00b8)
-    -- local col_b = color(0xb82609)
-    -- local col_a = color(0xe43b44)
-    -- local col_b = color(0xfee761c)
-    -- rect_color(col_a, "fill", 0, 25, w/2, 25)
-    -- rect_color(col_b, "fill", w/2, 25, w/2, 25)
-    -- for ix=0, w do
-    --     rect_color(lerp_color(col_a, col_b, ix/w), "fill", ix, 50, 1, 25)
-    --     rect_color(lerp_color_radial(col_a, col_b, ix/w), "fill", ix, 75, 1, 25)
-    --     rect_color(move_toward_color(col_a, col_b, ix/w), "fill", ix, 100, 1, 25)
-    --     rect_color(move_toward_color_radial(col_a, col_b, ix/w), "fill", ix, 120, 1, 25)
-    -- end
 end
 
 function Debug:draw_colview()
