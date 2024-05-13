@@ -1,0 +1,2 @@
+BUGSCRAPER_VERSION = "0.4.dev24-05-12b"
+DEMO_BUILD = true

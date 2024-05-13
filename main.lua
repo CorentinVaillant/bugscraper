@@ -1,8 +1,7 @@
+require "scripts.util"
+require "lib.please_work_error_explorer.error_explorer"
 local Class = require "scripts.meta.class"
 local Game = require "scripts.game.game"
-
-
-require "scripts.util"
 
 -- LÖVE uses Luajit 2.1 which is based on Lua 5.1 but has some additions (like goto)
 
@@ -16,31 +15,28 @@ end
 
 local t = 0
 local fixed_dt = 1/60 -- fixed frame delta time
-local frame = 0
+_G_frame = 0
+_G_fixed_frame = 0
 local function fixed_update()
-	--update that happens at the fixed fdt interval
-	frame = frame + 1
-	
-	-- game:update(fixed_dt)
+	_G_fixed_frame = _G_fixed_frame + 1
 	game:update(fixed_dt)
-	-- if frm % 2 == 0 and CAPTURING_GIF then
-	-- 	love.graphics.captureScreenshot("gif"..tostring(gif_n).."_"..tostring(floor(frm/2))..".png")
-	-- end
 end
+
 
 function love.update(dt)
 	t = t + dt
 	local cap = 1 --If there's lag spike, repeat up to how many frames?
 	local i = 0
-	while t > fixed_dt and cap > 0 do
-		t = t - fixed_dt
+	local update_fixed_dt = fixed_dt
+	while t > update_fixed_dt and cap > 0 do
+		t = t - update_fixed_dt
 		fixed_update()
 		cap = cap - 1
 		i=i+1
 	end
 
 	if game then   game.frame_repeat = i end
-	frame = frame + 1
+	_G_frame = _G_frame + 1
 end
 
 function love.draw()

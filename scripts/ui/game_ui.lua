@@ -27,6 +27,15 @@ function GameUI:draw()
 	self:draw_timer()
 	self:draw_version()
 	self:draw_offscreen_indicators()
+<<<<<<< HEAD
+=======
+end
+
+function GameUI:draw_front()
+	if not self.is_visible then return end
+
+	self:draw_FPS()
+>>>>>>> main
 end
 
 function GameUI:draw_logo()
@@ -42,6 +51,16 @@ function GameUI:draw_logo()
 		end
 		gfx.setColor(col)
 		gfx.draw(img, logo_x + ox, game.logo_y + oy)
+<<<<<<< HEAD
+=======
+		if DEMO_BUILD then
+			if i == 4 then
+				print_outline(COL_WHITE, COL_BLACK_BLUE, Text:text("game.demo"), logo_x + ox + 90, game.logo_y + oy + 19)
+			else
+				print_outline(col, col, Text:text("game.demo"), logo_x + ox + 90, game.logo_y + oy + 19)
+			end
+		end
+>>>>>>> main
 	end
 end
 
@@ -58,9 +77,9 @@ function GameUI:draw_join_tutorial()
 	local number_of_keyboard_users = Input:get_number_of_users(INPUT_TYPE_KEYBOARD)
 
 	local icons = {
-		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("jump", INPUT_TYPE_CONTROLLER), BUTTON_STYLE_XBOX),
-		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("jump", INPUT_TYPE_CONTROLLER), BUTTON_STYLE_PLAYSTATION5),
-		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("jump", INPUT_TYPE_KEYBOARD)),
+		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("join_game", INPUT_TYPE_CONTROLLER), BUTTON_STYLE_XBOX),
+		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("join_game", INPUT_TYPE_CONTROLLER), BUTTON_STYLE_PLAYSTATION5),
+		Input:get_button_icon(1, Input:get_input_profile("global"):get_primary_button("join_game", INPUT_TYPE_KEYBOARD)),
 	}
 	if number_of_keyboard_users >= 1 then
 		table.remove(icons)
@@ -98,6 +117,33 @@ function GameUI:draw_timer()
 	gfx.print(time_to_string(game.time), 8, 8)
 end
 
+<<<<<<< HEAD
+function GameUI:draw_offscreen_indicators()
+	local cam_x, cam_y = self.game.camera:get_position()
+	for i, player in pairs(self.game.players) do
+		if (player.x + player.w < cam_x) or (cam_x + CANVAS_WIDTH < player.x) 
+			or (player.y + player.h < cam_y) or (cam_y + CANVAS_HEIGHT < player.y) then 
+			self:draw_offscreen_indicator_for(player)
+=======
+function GameUI:draw_FPS()
+	if not Options:get("show_fps_warning") then
+		return
+	end
+	
+	local t = "⚠ "..Text:text("game.fps", love.timer.getFPS())
+	
+	if game.t > 2 and love.timer.getFPS() <= 50 then
+		print_outline(nil, nil, t, CANVAS_WIDTH - get_text_width(t) - 3, 3)
+		if game.menu_manager.cur_menu ~= nil then
+			t = "⚠ "..Text:text("game.fps_warning")
+			print_outline(nil, nil, t, CANVAS_WIDTH - get_text_width(t) - 3, 3+get_text_height())
+>>>>>>> main
+		end
+	end
+end
+
+<<<<<<< HEAD
+=======
 function GameUI:draw_offscreen_indicators()
 	local cam_x, cam_y = self.game.camera:get_position()
 	for i, player in pairs(self.game.players) do
@@ -108,6 +154,7 @@ function GameUI:draw_offscreen_indicators()
 	end
 end
 
+>>>>>>> main
 function GameUI:draw_offscreen_indicator_for(player)
 	-- local padding = 17
 	local padding = 24

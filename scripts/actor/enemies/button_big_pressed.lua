@@ -9,7 +9,10 @@ function ButtonBigPressed:init(x, y)
 end
 
 function ButtonBigPressed:init_button_big_pressed(x, y)
+<<<<<<< HEAD
     y = game.door_rect.by - 40
+=======
+>>>>>>> main
     self:init_enemy(x,y, images.big_red_button_pressed, 34, 40)
     self.name = "button_big_pressed"
     self.follow_player = false
